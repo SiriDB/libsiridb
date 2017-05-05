@@ -24,34 +24,6 @@
 static void siridb__connect(void * arg);
 static void siridb_on_data(siridb_t * conn, ssize_t n);
 static void siridb_on_pkg(siridb_t * conn, siridb_pkg_t * pkg);
-static void siridb_handle_cancel(siridb_handle_t * handle);
-
-static qp_res_t * siridb_map_get(qp_map_t * map, const char * key);
-static siridb_series_tp siridb_points_get_tp(qp_array_t * points);
-static siridb_series_t * siridb_series_create(
-        siridb_series_tp tp,
-        char ** name,
-        size_t n);
-static void siridb_series_destroy(siridb_series_t * series);
-
-void siridb_handle_init(
-        siridb_handle_t * handle,
-        siridb_t * conn,
-        siridb_cb cb,
-        void * arg)
-{
-    handle->conn = conn;
-    handle->cb = cb;
-    handle->arg = arg;
-    handle->status = ERR_UNFINISHED;
-    handle->pkg = NULL;
-}
-
-static void siridb_handle_cancel(siridb_handle_t * handle)
-{
-    handle->status = ERR_CANCELLED;
-    handle->cb(handle);
-}
 
 int siridb_init(
         siridb_t * conn,
@@ -65,20 +37,22 @@ int siridb_init(
     conn->password = strdup(password);
     conn->dbname = strdup(dbname);
     conn->imap = imap_new();
-    conn->buf = malloc(4096);
+    conn->buf = (char *) malloc(4096);
     conn->buf_sz = 4096;
     conn->buf_len = 0;
     conn->pid = 0;
-
+    conn->sockfd = -1;
 
     if (siridb_mutex_init(&conn->mutex) ||
         conn->username == NULL ||
         conn->password == NULL ||
         conn->dbname == NULL ||
-        conn->imap == NULL)
+        conn->imap == NULL ||
+        conn->buf == NULL)
     {
         return -1;
     }
+
     return 0;
 }
 
@@ -86,7 +60,7 @@ void siridb_destroy(siridb_t * conn)
 {
     if (conn->imap != NULL)
     {
-        imap_free(conn->imap, (imap_free_cb) siridb_handle_cancel);
+        imap_free(conn->imap, (imap_free_cb) siridb__handle_cancel);
     }
     if (conn->buf != NULL)
     {
@@ -105,6 +79,15 @@ void siridb_destroy(siridb_t * conn)
         free(conn->dbname);
     }
 
+    if (conn->sockfd > 0)
+    {
+        close(conn->sockfd);
+    }
+    pthread_cancel(conn->thread);
+    pthread_cancel(conn->connthread);
+    pthread_join(conn->thread, NULL);
+    pthread_join(conn->connthread, NULL);
+
     siridb_mutex_destroy(&conn->mutex);
 }
 
@@ -121,6 +104,7 @@ void siridb_read_data(void * arg)
                 conn->buf_sz - conn->buf_len);
         siridb_on_data(conn, n);
     }
+    pthread_exit(NULL);
 }
 
 static void siridb_on_data(siridb_t * conn, ssize_t n)
@@ -185,93 +169,6 @@ static void siridb_on_data(siridb_t * conn, ssize_t n)
     }
 }
 
-
-static siridb_series_tp siridb_points_get_tp(qp_array_t * points)
-{
-    qp_array_t * point;
-
-    if (!points->n)
-    {
-        /* return integer type in case the series has no points */
-        return SIRIDB_SERIES_TP_INT64;
-    }
-
-    if (points->values[0].tp != QP_RES_ARRAY ||
-        (point = points->values[0].via.array)->n != 2)
-    {
-        return -1;
-    }
-
-    switch (point->values[1].tp)
-    {
-    case QP_RES_INT64:
-        return SIRIDB_SERIES_TP_INT64;
-    case QP_RES_REAL:
-        return SIRIDB_SERIES_TP_REAL;
-    case QP_RES_STR:
-        return SIRIDB_SERIES_TP_STR;
-    case QP_RES_MAP:
-    case QP_RES_ARRAY:
-    case QP_RES_BOOL:
-    case QP_RES_NULL:
-    default:
-        return -1;
-    }
-}
-
-/*
- * This binds *name to the series->name and makes *name NULL when this function
- * is successful.
- */
-static siridb_series_t * siridb_series_create(
-        siridb_series_tp tp,
-        char ** name,
-        size_t n)
-{
-    siridb_series_t * series = (siridb_series_t *) malloc(
-            sizeof(siridb_series_t) + n * sizeof(siridb_point_t));
-
-    if (series != NULL)
-    {
-        series->tp = tp;
-
-        /* move name rather than copy to avoid memory allocations */
-        series->name = *name;
-        *name = NULL;
-
-        series->n = n;
-
-        if (series->tp == SIRIDB_SERIES_TP_STR)
-        {
-            /* initialize string series with NULL pointers */
-            size_t i;
-            for (i = 0; i < n; i++)
-            {
-                series->points[i].via.str = NULL;
-            }
-        }
-    }
-
-    return series;
-}
-
-static void siridb_series_destroy(siridb_series_t * series)
-{
-    if (series->tp == SIRIDB_SERIES_TP_STR)
-    {
-        size_t i;
-        for (i = 0; i < series->n; i++)
-        {
-            free(series->points[i].via.str);
-        }
-    }
-    free(series->name);
-    free(series);
-}
-
-
-
-
 static void siridb_on_pkg(siridb_t * conn, siridb_pkg_t * pkg)
 {
 
@@ -286,16 +183,17 @@ static void siridb_on_pkg(siridb_t * conn, siridb_pkg_t * pkg)
     }
 
     handle->pkg = siridb_pkg_dup(pkg);
-    printf("Found handle...");
     handle->status = (handle->pkg == NULL) ? ERR_MEM_ALLOC : 0;
-    printf("Status ... %d (%u)\n", handle->status, pkg->pid);
+
     conn->cb(handle);
 }
 
 int siridb_connect(siridb_handle_t * handle)
 {
-    siridb_thread_t thread;
-    return siridb_thread_create(&thread, siridb__connect, handle);
+    return siridb_thread_create(
+            &handle->conn->connthread,
+            siridb__connect,
+            handle);
 }
 
 int siridb_send(siridb_handle_t * handle, siridb_pkg_t * pkg)
@@ -338,7 +236,6 @@ int siridb_send(siridb_handle_t * handle, siridb_pkg_t * pkg)
 
 static void siridb__connect(void * arg)
 {
-
     struct hostent *hp;
     struct sockaddr_in sin;
     memset(&sin, '\0', sizeof(sin));
@@ -351,7 +248,6 @@ static void siridb__connect(void * arg)
         fprintf(stderr, "host not found (%s)\n", "localhost");
         exit(1);
     }
-
 
 
     sin.sin_family = AF_INET;
@@ -402,6 +298,8 @@ static void siridb__connect(void * arg)
                 packer->len,
                 packer->buffer);
         siridb_send(handle, pkg);
+        free(pkg);
+        qp_packer_destroy(packer);
     }
 
     pthread_exit(NULL);
@@ -430,21 +328,9 @@ void siridb_query(siridb_handle_t * handle, const char * query)
             abort();
         }
         siridb_send(handle, pkg);
+        free(pkg);
+        qp_packer_destroy(packer);
     }
 }
 
-static qp_res_t * siridb_map_get(qp_map_t * map, const char * key)
-{
-    size_t i;
 
-    for (i = 0; i < map->n; i++)
-    {
-        if (map->keys[i].tp == QP_RES_STR &&
-            strcmp(map->keys[i].via.str, key) == 0)
-        {
-            return map->values + i;
-        }
-    }
-
-    return NULL;
-}

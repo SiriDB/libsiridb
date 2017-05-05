@@ -15,9 +15,10 @@
 #define ERR_THREAD_START    -5
 #define ERR_NO_REPLY        -6
 #define ERR_CANCELLED       -7
-#define ERR_INVALID_STATUS  -8
+#define ERR_INVALID_STAT    -8
 #define ERR_CORRUPT         -9
-#define ERR_UNKNOWN         -10
+#define ERR_DESTROYED       -10
+#define ERR_UNKNOWN         -12
 
 
 #endif /* SIRIDB_ERRMAP_H_ */

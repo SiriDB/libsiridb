@@ -13,22 +13,14 @@
 #include <thread.h>
 #include <imap.h>
 #include <pkg.h>
-#include <qpack.h>
-
-typedef union siridb_point_u siridb_point_via_t;
-typedef struct siridb_point_s siridb_point_t;
-
-typedef enum siridb_series_e siridb_series_tp;
-typedef struct siridb_series_s siridb_series_t;
-
+#include <resp.h>
+#include <errmap.h>
+#include <protomap.h>
+#include <series.h>
+#include <handle.h>
+#include <netinet/in.h>
 
 typedef struct siridb_s siridb_t;
-typedef struct siridb_handle_s siridb_handle_t;
-
-/*
- * status: Status is zero when successful or a another value when something
- *         went wrong. (for example when a query error occurs).
- */
 typedef void (*siridb_cb) (siridb_handle_t * handle);
 
 void siridb_query(siridb_handle_t * handle, const char * query);
@@ -40,26 +32,17 @@ int siridb_init(
         const char * password,
         const char * dbname);
 void siridb_destroy(siridb_t * conn);
+int siridb_connect(siridb_handle_t * handle);
+
 void siridb_handle_init(
         siridb_handle_t * handle,
         siridb_t * conn,
         siridb_cb cb,
         void * arg);
-int siridb_connect(siridb_handle_t * handle);
+void siridb_handle_destroy(siridb_handle_t * handle);
 
-enum siridb_series_e
-{
-    SIRIDB_SERIES_TP_INT64,
-    SIRIDB_SERIES_TP_REAL,
-    SIRIDB_SERIES_TP_STR
-};
-
-union siridb_point_u
-{
-    int64_t int64;
-    double real;
-    char * str;     /* null terminated string */
-};
+int siridb_resp_init(siridb_resp_t * resp, siridb_handle_t * handle);
+void siridb_resp_destroy(siridb_resp_t * resp);
 
 struct siridb_s
 {
@@ -72,6 +55,7 @@ struct siridb_s
     struct sockaddr_in * addr;
     int sockfd;
     siridb_thread_t thread;
+    siridb_thread_t connthread;
     imap_t * imap;
     siridb_mutex_t mutex;
     char * buf;
@@ -79,31 +63,5 @@ struct siridb_s
     size_t buf_len;
     uint16_t pid;
 };
-
-struct siridb_handle_s
-{
-    siridb_t * conn;
-    siridb_cb cb;
-    void * arg;
-    int status;
-    siridb_pkg_t * pkg;
-};
-
-struct siridb_point_s
-{
-    uint64_t ts;                /* time-stamp */
-    siridb_point_via_t via;     /* value */
-};
-
-struct siridb_series_s
-{
-    siridb_series_tp tp;
-    char * name;
-    size_t n;
-    siridb_point_t points[];
-};
-
-
-
 
 #endif /* SIRIDB_H_ */

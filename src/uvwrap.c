@@ -8,7 +8,6 @@
 #include <uvwrap.h>
 #include <stdlib.h>
 
-
 static void uvwrap__cb(siridb_handle_t * handle);
 static void uvwrap__handle_cb(uv_async_t * async);
 

@@ -16,7 +16,6 @@ int siridb_thread_create(
     return -pthread_create(tid, NULL, (void*(*)(void*)) entry, arg);
 }
 
-
 int siridb_mutex_init(siridb_mutex_t * mutex)
 {
 #if defined(NDEBUG) || !defined(PTHREAD_MUTEX_ERRORCHECK)

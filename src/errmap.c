@@ -19,6 +19,11 @@ const char * siridb_err_name(int err)
     case ERR_UNFINISHED:    return "handle is not finished";
     case ERR_THREAD_START:  return "cannot start thread";
     case ERR_NO_REPLY:      return "overwritten before reply";
+    case ERR_CANCELLED:     return "handle is cancelled";
+    case ERR_INVALID_STAT:  return "invalid handle status";
+    case ERR_CORRUPT:       return "data is corrupt";
+    case ERR_DESTROYED:     return "handle is destroyed";
+    case ERR_UNKNOWN:
     default:                return "unknown";
     }
 }

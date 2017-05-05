@@ -8,7 +8,11 @@
 #ifndef SIRIDB_RESP_H_
 #define SIRIDB_RESP_H_
 
+#define SIRIDB_RESP_SUCCESS 0
+#define SIRIDB_RESP_ERROR 1
+
 #include <qpack.h>
+#include <series.h>
 
 /* response definitions */
 typedef enum siridb_resp_e siridb_resp_tp;
@@ -23,8 +27,6 @@ typedef struct siridb_timeit_s siridb_timeit_t;
 typedef struct siridb_item_s siridb_item_t;
 typedef struct siridb_perf_s siridb_perf_t;
 
-int siridb_resp_read(siridb_resp_t * resp, siridb_handle_t * handle);
-
 enum siridb_resp_e
 {
     SIRIDB_RESP_TP_UNDEF=0,
@@ -34,8 +36,11 @@ enum siridb_resp_e
     SIRIDB_RESP_TP_COUNT,
     SIRIDB_RESP_TP_CALC,
     SIRIDB_RESP_TP_SUCCESS,
+    SIRIDB_RESP_TP_SUCCESS_MSG,
     SIRIDB_RESP_TP_ERROR,
+    SIRIDB_RESP_TP_ERROR_MSG,
     SIRIDB_RESP_TP_HELP,
+    SIRIDB_RESP_TP_DATA,
     SIRIDB_RESP_TP_MOTD     /* only when SiriDB server is in debug mode */
 };
 
@@ -43,10 +48,13 @@ union siridb_resp_u {
     siridb_select_t * select;
     siridb_list_t * list;
     siridb_show_t * show;
+    qp_res_t * data;
     uint64_t count;
     uint64_t calc;
     char * success;
     char * error;
+    char * success_msg;
+    char * error_msg;
     char * help;
     char * motd;  /* only when SiriDB server is in debug mode */
 };
@@ -72,8 +80,8 @@ struct siridb_item_s
 
 struct siridb_list_s
 {
-    qp_array_t * headers;
-    qp_array_t * data;
+    qp_res_t * headers;
+    qp_res_t * data;
 };
 
 struct siridb_select_s
