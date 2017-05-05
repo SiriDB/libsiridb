@@ -1,2 +1,2 @@
-# siridb-connector-c
-SiriDB connector for the C language
+# SiriDB Connector C
+Work in progress for creating a C driver for communication with SiriDB...
