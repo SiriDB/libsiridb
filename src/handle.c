@@ -27,6 +27,15 @@ void siridb_handle_destroy(siridb_handle_t * handle)
     free(handle->pkg);
 }
 
+void siridb_handle_cancel(siridb_t * conn, siridb_handle_t * handle)
+{
+    /* remove handle from imap if exists */
+    imap_pop(conn->imap, (uint64_t) handle->pid);
+
+    /* cancel handle */
+    siridb__handle_cancel(handle);
+}
+
 void siridb__handle_cancel(siridb_handle_t * handle)
 {
     handle->status = ERR_CANCELLED;

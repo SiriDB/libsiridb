@@ -57,7 +57,6 @@ struct siridb_s
     siridb_thread_t thread;
     siridb_thread_t connthread;
     imap_t * imap;
-    siridb_mutex_t mutex;
     char * buf;
     size_t buf_sz;
     size_t buf_len;

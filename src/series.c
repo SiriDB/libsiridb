@@ -6,6 +6,8 @@
  */
 
 #include <series.h>
+#include <stdlib.h>
+#include <string.h>
 
 /*
  * Create a series. Argument name is allowed to be NULL. In this case

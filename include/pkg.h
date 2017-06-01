@@ -11,7 +11,7 @@
 #include <inttypes.h>
 
 #define SIRIDB_PKG_SZ 8
-#define SIRIDB_PKG_MAX_SZ 52428800
+#define SIRIDB_PKG_MAX_SZ 524288000 // 500MB
 
 typedef struct siridb_pkg_s siridb_pkg_t;
 

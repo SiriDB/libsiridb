@@ -43,8 +43,7 @@ int siridb_init(
     conn->pid = 0;
     conn->sockfd = -1;
 
-    if (siridb_mutex_init(&conn->mutex) ||
-        conn->username == NULL ||
+    if (conn->username == NULL ||
         conn->password == NULL ||
         conn->dbname == NULL ||
         conn->imap == NULL ||
@@ -87,8 +86,6 @@ void siridb_destroy(siridb_t * conn)
     pthread_cancel(conn->connthread);
     pthread_join(conn->thread, NULL);
     pthread_join(conn->connthread, NULL);
-
-    siridb_mutex_destroy(&conn->mutex);
 }
 
 void siridb_read_data(void * arg)
@@ -114,9 +111,8 @@ static void siridb_on_data(siridb_t * conn, ssize_t n)
 
     if (n < 0)
     {
-        // TODO: error...
-        printf("error....n = %zd\n", n);
-        abort();
+        printf("error: while reading data, closing connection\n");
+        siridb_destroy(conn);
         return;
     }
 
@@ -130,8 +126,8 @@ static void siridb_on_data(siridb_t * conn, ssize_t n)
     pkg = (siridb_pkg_t *) conn->buf;
     if ((pkg->tp ^ 255) != pkg->checkbit || pkg->len > SIRIDB_PKG_MAX_SZ)
     {
-        // TODO: error...
-        printf("error....pkg check");
+        printf("error: received an invalid pkg, closing connection\n");
+        siridb_destroy(conn);
         return;
     }
 
@@ -160,8 +156,8 @@ static void siridb_on_data(siridb_t * conn, ssize_t n)
         tmp = (char *) realloc(conn->buf, total_sz);
         if (tmp == NULL)
         {
-            // TODO: error...
-            printf("error....re-allocation");
+            printf("error: while calling realloc, closing connection\n");
+            siridb_destroy(conn);
             return;
         }
         conn->buf = tmp;
@@ -171,14 +167,12 @@ static void siridb_on_data(siridb_t * conn, ssize_t n)
 
 static void siridb_on_pkg(siridb_t * conn, siridb_pkg_t * pkg)
 {
-
     siridb_handle_t * handle =
             (siridb_handle_t *) imap_pop(conn->imap, (uint64_t) pkg->pid);
 
     if (handle == NULL)
     {
-        //TODO: error, handle not found...
-        printf("error....handle not found");
+        printf("error: handle not found, most likely it was cancelled\n");
         return;
     }
 
@@ -248,7 +242,6 @@ static void siridb__connect(void * arg)
         fprintf(stderr, "host not found (%s)\n", "localhost");
         exit(1);
     }
-
 
     sin.sin_family = AF_INET;
     sin.sin_port = htons(port);

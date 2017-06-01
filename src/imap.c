@@ -87,10 +87,9 @@ void imap_free(imap_t * imap, imap_free_cb cb)
  */
 int imap_add(imap_t * imap, uint64_t id, void * data)
 {
-#ifdef DEBUG
     /* insert NULL is not allowed */
     assert (data != NULL);
-#endif
+
     int rc;
     imap_node_t * nd = imap->nodes + (id % IMAP_NODE_SZ);
     id /= IMAP_NODE_SZ;
