@@ -5,6 +5,8 @@
  *      Author: Jeroen van der Heijden <jeroen@transceptor.technology>
  */
 
+ #include <conn.h>
+
 siridb_conn_t * siridb__conn_create(
         const char * username,
         const char * password,
@@ -18,6 +20,7 @@ siridb_conn_t * siridb__conn_create(
         conn->dbname = strdup(dbname);
         conn->imap = imap_new();
         conn->pid = 0;
+        conn->_conn = NULL;
 
         if (conn->username == NULL ||
             conn->password == NULL ||
