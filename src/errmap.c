@@ -13,6 +13,7 @@ const char * siridb_err_name(int err)
 {
     switch (err)
     {
+    case 0:                 return "success";
     case ERR_MEM_ALLOC:     return "memory allocation failed";
     case ERR_SOCK_FD:       return "cannot create socket file descriptor";
     case ERR_SOCK_CONNECT:  return "cannot open socket";

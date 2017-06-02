@@ -18,7 +18,7 @@
 #define ERR_INVALID_STAT    -8
 #define ERR_CORRUPT         -9
 #define ERR_DESTROYED       -10
-#define ERR_UNKNOWN         -12
+#define ERR_UNKNOWN         -30
 
 
 #endif /* SIRIDB_ERRMAP_H_ */
