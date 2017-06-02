@@ -10,6 +10,7 @@
 
 #include <inttypes.h>
 
+
 #define SIRIDB_PKG_SZ 8
 #define SIRIDB_PKG_MAX_SZ 524288000 // 500MB
 
@@ -24,7 +25,7 @@ struct siridb_pkg_s
     unsigned char data[];
 };
 
-siridb_pkg_t * sirinet_pkg_new(
+siridb_pkg_t * sirinet_pkg_create(
         uint8_t tp,
         uint16_t pid,
         uint32_t len,

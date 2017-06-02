@@ -48,6 +48,11 @@ static const char * count_types[] = {
         "shards_size"
 };
 
+/*
+ * Initialize siridb_resp_t object.
+ * Returns 0 if successful or a negative value in case of an error.
+ *
+ */
 int siridb_resp_init(siridb_resp_t * resp, siridb_handle_t * handle)
 {
     resp->tp = SIRIDB_RESP_TP_UNDEF;
@@ -90,7 +95,7 @@ int siridb_resp_init(siridb_resp_t * resp, siridb_handle_t * handle)
         return siridb_resp_error(resp, handle->pkg->tp);
     }
 
-    return SIRIDB_RESP_SUCCESS;
+    return ERR_CORRUPT;
 }
 
 void siridb_resp_destroy(siridb_resp_t * resp)
@@ -170,7 +175,7 @@ static int siridb_resp_success(siridb_resp_t * resp, uint8_t tp)
         assert (0);
     }
 
-    return SIRIDB_RESP_SUCCESS;
+    return 0;
 }
 
 static int siridb_resp_error(siridb_resp_t * resp, uint8_t tp)
@@ -205,7 +210,7 @@ static int siridb_resp_error(siridb_resp_t * resp, uint8_t tp)
         break;
     }
 
-    return SIRIDB_RESP_ERROR;
+    return 0;
 }
 
 static int siridb_resp_success_msg(siridb_resp_t * resp, siridb_pkg_t * pkg)
@@ -261,7 +266,7 @@ static int siridb_resp_error_msg(siridb_resp_t * resp, siridb_pkg_t * pkg)
             resp->tp = SIRIDB_RESP_TP_ERROR_MSG;
             resp->via.error_msg = msg->via.str;
             msg->tp = QP_RES_NULL;
-            rc = SIRIDB_RESP_ERROR;
+            rc = 0;
         }
         else
         {

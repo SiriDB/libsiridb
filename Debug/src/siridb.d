@@ -1,7 +1,8 @@
 src/siridb.o: ../src/siridb.c .././include/siridb.h .././include/thread.h \
  .././include/imap.h .././include/pkg.h .././include/resp.h \
  .././include/series.h .././include/point.h .././include/errmap.h \
- .././include/protomap.h .././include/handle.h
+ .././include/protomap.h .././include/handle.h .././include/conn.h \
+ .././include/packer.h
 
 .././include/siridb.h:
 
@@ -22,3 +23,7 @@ src/siridb.o: ../src/siridb.c .././include/siridb.h .././include/thread.h \
 .././include/protomap.h:
 
 .././include/handle.h:
+
+.././include/conn.h:
+
+.././include/packer.h:

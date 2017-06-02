@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-siridb_pkg_t * sirinet_pkg_new(
+siridb_pkg_t * sirinet_pkg_create(
         uint8_t tp,
         uint16_t pid,
         uint32_t len,

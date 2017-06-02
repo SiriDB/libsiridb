@@ -8,9 +8,6 @@
 #ifndef SIRIDB_RESP_H_
 #define SIRIDB_RESP_H_
 
-#define SIRIDB_RESP_SUCCESS 0
-#define SIRIDB_RESP_ERROR 1
-
 #include <qpack.h>
 #include <series.h>
 

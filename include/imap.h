@@ -30,8 +30,8 @@ struct imap_s
     imap_node_t nodes[];
 };
 
-imap_t * imap_new(void);
-void imap_free(imap_t * imap, imap_free_cb cb);
+imap_t * imap_create(void);
+void imap_destroy(imap_t * imap, imap_free_cb cb);
 int imap_add(imap_t * imap, uint64_t id, void * data);
 void * imap_get(imap_t * imap, uint64_t id);
 void * imap_pop(imap_t * imap, uint64_t id);

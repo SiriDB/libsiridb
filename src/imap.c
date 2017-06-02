@@ -8,6 +8,7 @@
 #include <imap.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <errmap.h>
 
 #define IMAP_NODE_SZ 32
 
@@ -22,7 +23,7 @@ static void IMAP_walk(imap_node_t * node, imap_cb cb, void * data, int * rc);
 /*
  * Returns NULL in case an allocation error has occurred.
  */
-imap_t * imap_new(void)
+imap_t * imap_create(void)
 {
     imap_t * imap = (imap_t *) calloc(
             1,
@@ -38,7 +39,7 @@ imap_t * imap_new(void)
 /*
  * Destroy imap with optional call-back function.
  */
-void imap_free(imap_t * imap, imap_free_cb cb)
+void imap_destroy(imap_t * imap, imap_free_cb cb)
 {
     if (imap->len)
     {
@@ -81,36 +82,35 @@ void imap_free(imap_t * imap, imap_free_cb cb)
 /*
  * Add data by id to the map.
  *
- * Returns 0 when data is overwritten and 1 if a new id/value is set.
+ * Returns 0 when successful of a negative value in case of an error.
  *
- * In case of an error we return -1 and a SIGNAL is raised.
+ * possible error codes:
+ *   ERR_OCCUPIED   : when the id already exists
+ *   ERR_MEM_ALLOC  : memory allocation error has occurred
  */
 int imap_add(imap_t * imap, uint64_t id, void * data)
 {
     /* insert NULL is not allowed */
     assert (data != NULL);
 
-    int rc;
+    int rc = 0;
     imap_node_t * nd = imap->nodes + (id % IMAP_NODE_SZ);
     id /= IMAP_NODE_SZ;
 
     if (!id)
     {
-        rc = (nd->data == NULL);
+        if (nd->data != NULL)
+        {
+            return ERR_OCCUPIED;
+        }
 
-        imap->len += rc;
+        imap->len++;
         nd->data = data;
     }
-    else
+    else if ((rc = IMAP_add(nd, id - 1, data)) == 0)
     {
-        rc = IMAP_add(nd, id - 1, data);
-
-        if (rc > 0)
-        {
-            imap->len++;
-        }
+        imap->len++;
     }
-
 
     return rc;
 }
@@ -229,9 +229,7 @@ static void IMAP_node_free_cb(imap_node_t * node, imap_free_cb cb)
 /*
  * Add data by id to the map.
  *
- * Returns 0 when data is overwritten and 1 if a new id/value is set.
- *
- * In case of an error -1 will be returned.
+ * Returns 0 when successful or a negative value in case of an error.
  */
 static int IMAP_add(imap_node_t * node, uint64_t id, void * data)
 {
@@ -243,7 +241,7 @@ static int IMAP_add(imap_node_t * node, uint64_t id, void * data)
 
         if (node->nodes == NULL)
         {
-            return -1;
+            return ERR_MEM_ALLOC;
         }
     }
 
@@ -253,7 +251,10 @@ static int IMAP_add(imap_node_t * node, uint64_t id, void * data)
 
     if (!id)
     {
-        rc = (nd->data == NULL);
+        if (nd->data != NULL)
+        {
+            return ERR_OCCUPIED;
+        }
 
         nd->data = data;
         node->size += rc;
@@ -261,9 +262,7 @@ static int IMAP_add(imap_node_t * node, uint64_t id, void * data)
         return rc;
     }
 
-    rc = IMAP_add(nd, id - 1, data);
-
-    if (rc > 0)
+    if ((rc = IMAP_add(nd, id - 1, data)) == 0)
     {
         node->size++;
     }

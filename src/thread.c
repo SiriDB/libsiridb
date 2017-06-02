@@ -5,6 +5,8 @@
  *      Author: Jeroen van der Heijden <jeroen@transceptor.technology>
  */
 
+#ifdef USE_THREAD
+
 #include <thread.h>
 #include <stdlib.h>
 
@@ -68,3 +70,5 @@ void siridb_mutex_unlock(siridb_mutex_t * mutex)
         abort();
     }
 }
+
+#endif /* USE_THREAD */

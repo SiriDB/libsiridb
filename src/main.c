@@ -11,7 +11,6 @@
 #include <uv.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <uvwrap.h>
 #include <qpack.h>
 
 int results = 0;
@@ -42,7 +41,6 @@ static void print_val(qp_res_t * val)
         printf("null"); break;
     }
 }
-
 
 static void on_data2(siridb_handle_t * handle)
 {
@@ -133,18 +131,7 @@ static void on_data2(siridb_handle_t * handle)
 static void on_data(siridb_handle_t * handle)
 {
     printf("Here...%d\n", handle->status);
-    siridb_handle_t * h1 = (siridb_handle_t *) malloc(sizeof(siridb_handle_t));
-    siridb_handle_t * h2 = (siridb_handle_t *) malloc(sizeof(siridb_handle_t));
 
-    siridb_handle_init(h1, handle->conn, on_data2, NULL);
-    uvwrap_handle_init(h1);
-    siridb_query(h1, "list serie name, start, end");
-
-    siridb_handle_init(h2, handle->conn, on_data2, NULL);
-    uvwrap_handle_init(h2);
-    siridb_query(h2, "timeit select * from /.*/");
-    siridb_handle_destroy(handle);
-    free(handle);
 }
 
 static void walk_close_handlers(uv_handle_t * handle, void * arg)
@@ -206,66 +193,66 @@ int main(void)
     uv_idle_init(loop, &idler);
     uv_idle_start(&idler, wait_for_a_while);
 
-    puts("Start siridb library test...");
-    int errn = 0;
-    siridb_t conn;
-    siridb_handle_t * handle = (siridb_handle_t *) malloc(sizeof(siridb_handle_t));
+//     puts("Start siridb library test...");
+//     int errn = 0;
+//     siridb_t conn;
+//     siridb_handle_t * handle = (siridb_handle_t *) malloc(sizeof(siridb_handle_t));
 
-    struct hostent *hp;
-    struct sockaddr_in sin;
-    memset(&sin, '\0', sizeof(sin));
+//     struct hostent *hp;
+//     struct sockaddr_in sin;
+//     memset(&sin, '\0', sizeof(sin));
 
-    int port = 9000;
-//    int rc;
+//     int port = 9000;
+// //    int rc;
 
-    hp = gethostbyname("localhost");
-    if ( hp == NULL ) {
-        fprintf(stderr, "host not found (%s)\n", "localhost");
-        exit(1);
-    }
+//     hp = gethostbyname("localhost");
+//     if ( hp == NULL ) {
+//         fprintf(stderr, "host not found (%s)\n", "localhost");
+//         exit(1);
+//     }
 
-    sin.sin_family = AF_INET;
-    sin.sin_port = htons(port);
-    memcpy(&sin.sin_addr, hp->h_addr_list[0], hp->h_length);
+//     sin.sin_family = AF_INET;
+//     sin.sin_port = htons(port);
+//     memcpy(&sin.sin_addr, hp->h_addr_list[0], hp->h_length);
 
-    errn = siridb_init(
-            &conn,
-            &sin,
-            "iris", "siri", "dbtest");
+//     errn = siridb_init(
+//             &conn,
+//             &sin,
+//             "iris", "siri", "dbtest");
 
-    uvwrap_init(&conn, loop);
-    siridb_handle_init(handle, &conn, on_data, NULL);
-    uvwrap_handle_init(handle);
-    siridb_connect(handle);
+//     uvwrap_init(&conn, loop);
+//     siridb_handle_init(handle, &conn, on_data, NULL);
+//     uvwrap_handle_init(handle);
+//     siridb_connect(handle);
 
-    if (errn) {
-        puts(siridb_err_name(errn));
-        abort();
-    }
+//     if (errn) {
+//         puts(siridb_err_name(errn));
+//         abort();
+//     }
 
-    uv_run(loop, UV_RUN_DEFAULT);
+//     uv_run(loop, UV_RUN_DEFAULT);
 
-    close_handlers();
+//     close_handlers();
 
-    siridb_destroy(&conn);
+//     siridb_destroy(&conn);
 
 
-    int r = uv_loop_close(loop);
-    free(loop);
+//     int r = uv_loop_close(loop);
+//     free(loop);
 
-//    packer = qp_packer_create(QP_SUGGESTED_SIZE);
-//    qp_add_map(&packer);
-//    qp_add_raw(packer, "Hi Qpack", strlen("Hi Qpack"));
-//    qp_add_int64(packer, 9);
-//    qp_add_int64(packer, -79);
-//    qp_add_int64(packer, -1);
-//    qp_add_int64(packer, 123456789);
-//    qp_add_double(packer, 123.456);
-//    qp_close_map(packer);
-//    qp_packer_print(packer);
-//    qp_packer_destroy(packer);
+// //    packer = qp_packer_create(QP_SUGGESTED_SIZE);
+// //    qp_add_map(&packer);
+// //    qp_add_raw(packer, "Hi Qpack", strlen("Hi Qpack"));
+// //    qp_add_int64(packer, 9);
+// //    qp_add_int64(packer, -79);
+// //    qp_add_int64(packer, -1);
+// //    qp_add_int64(packer, 123456789);
+// //    qp_add_double(packer, 123.456);
+// //    qp_close_map(packer);
+// //    qp_packer_print(packer);
+// //    qp_packer_destroy(packer);
 
-    printf("Finished siridb library test! (%d)\n", r);
+    // printf("Finished siridb library test! (%d)\n", r);
 
     return 0;
 }

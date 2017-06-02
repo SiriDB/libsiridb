@@ -4,6 +4,7 @@
  *  Created on: Apr 07, 2017
  *      Author: Jeroen van der Heijden <jeroen@transceptor.technology>
  */
+#ifdef USE_THREAD
 
 #ifndef SIRIDB_THREAD_H_
 #define SIRIDB_THREAD_H_
@@ -24,3 +25,5 @@ void siridb_mutex_lock(siridb_mutex_t * mutex);
 void siridb_mutex_unlock(siridb_mutex_t * mutex);
 
 #endif /* SIRIDB_THREAD_H_ */
+
+#endif /* USE_THREAD */
