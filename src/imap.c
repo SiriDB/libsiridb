@@ -257,9 +257,9 @@ static int IMAP_add(imap_node_t * node, uint64_t id, void * data)
         }
 
         nd->data = data;
-        node->size += rc;
+        node->size++;
 
-        return rc;
+        return 0;
     }
 
     if ((rc = IMAP_add(nd, id - 1, data)) == 0)

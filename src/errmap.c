@@ -9,7 +9,7 @@
 #include <siridb.h>
 #include <errno.h>
 
-const char * siridb_err_name(int err)
+const char * siridb_strerror(int err)
 {
     switch (err)
     {

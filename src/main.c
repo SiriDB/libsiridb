@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <qpack.h>
+#include <siridbuv.h>
 
 int results = 0;
 uv_loop_t * loop;
@@ -183,15 +184,64 @@ static void close_handlers(void)
     uv_run(loop, UV_RUN_DEFAULT);
 }
 
+static void on_connect(siridb_handle_t * handle)
+{
+    printf("OnConnect: %d (%s)\n", handle->status, siridb_uv_strerror(handle));
+    siridb_handle_destroy(handle);
+}
+
+static void auth_cb(siridb_handle_t handle)
+{
+
+}
+
+static void connect_cb(uv_connect_t * req, int status)
+{
+    if (status != 0)
+    {
+        /* error handling */
+    }
+    else
+    {
+        siridb_t * siridb = (siridb_t *) req->handle->data;
+        siridb_pkg_t * pkg = (siridb_pkg_t *) req->data;
+        siridb_handle_create(siridb, pkg, req->data, auth_cb, NULL);
+    }
+}
+
 int main(void)
 {
-//    qp_packer_t * packer;
+    siridb_handle_t * handle;
+    uv_tcp_t * tcp = = (uv_tcp_t *) malloc(sizeof(uv_tcp_t));
+    struct sockaddr_in dest;
     uv_idle_t idler;
+
     loop = (uv_loop_t *) malloc(sizeof(uv_loop_t));
     uv_loop_init(loop);
 
     uv_idle_init(loop, &idler);
     uv_idle_start(&idler, wait_for_a_while);
+
+    uv_ip4_addr("127.0.0.1", 9000, &dest);
+
+    siridb_t * siridb = siridb_create();
+
+    uv_connect_t * req = (uv_connect_t *) malloc(sizeof(uv_connect_t));
+    /* error handling */
+
+    req->data = (void *) siridb_pkg_auth("iris", "siri", "dbtest");
+    tcp->data = (void *) siridb;
+
+    uv_tcp_init(loop, &tcp);
+    uv_tcp_connect(req, &tcp, (struct sockaddr) addr, connect_cb);
+
+    // siridb_uv_connect(
+    //     handle,
+    //     loop,
+    //     "iris",
+    //     "siri",
+    //     "dbtest",
+    //     (const struct sockaddr *) &dest);
 
 //     puts("Start siridb library test...");
 //     int errn = 0;
@@ -230,15 +280,14 @@ int main(void)
 //         abort();
 //     }
 
-//     uv_run(loop, UV_RUN_DEFAULT);
-
-//     close_handlers();
 
 //     siridb_destroy(&conn);
 
+    uv_run(loop, UV_RUN_DEFAULT);
+    close_handlers();
 
-//     int r = uv_loop_close(loop);
-//     free(loop);
+    int r = uv_loop_close(loop);
+    free(loop);
 
 // //    packer = qp_packer_create(QP_SUGGESTED_SIZE);
 // //    qp_add_map(&packer);

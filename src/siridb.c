@@ -23,6 +23,13 @@
 
 void siridb_send(siridb_handle_t * handle, siridb_pkg_t * pkg)
 {
+    assert (handle->pkg == NULL);
+
+    handle->pkg = pkg;
+
+    /* set next pid */
+    pkg->pid = handle->conn->pid++;
+
     int rc = imap_add(handle->conn->imap, pkg->pid, (void *) handle);
 
     if (rc == ERR_MEM_ALLOC)
@@ -43,14 +50,10 @@ void siridb_send(siridb_handle_t * handle, siridb_pkg_t * pkg)
         prev->cb(prev);
     }
 
-    rc = siridb__write(handle, pkg);
+    /* set the correct check bit */
+    pkg->checkbit = pkg->tp ^ 255;
 
-    if (!rc)
-    {
-        handle->status = rc;
-        imap_pop(handle->conn->imap, pkg->pid);
-        handle->cb(handle);
-    }
+    siridb__write(handle, pkg);
 }
 
 void siridb_query(siridb_handle_t * handle, const char * query)
@@ -67,19 +70,14 @@ void siridb_query(siridb_handle_t * handle, const char * query)
     }
     else
     {
-        siridb_pkg_t * pkg = siridb_packer_2pkg(
-                packer,
-                handle->conn->pid++,
-                CprotoReqQuery);
-        siridb_send(handle, pkg);
-        free(pkg);
+        siridb_send(handle, siridb_packer_2pkg(packer, CprotoReqQuery));
     }
 }
 
-void siridb__on_pkg(siridb_conn_t * conn, siridb_pkg_t * pkg)
+void siridb_on_pkg(siridb_t * siridb, siridb_pkg_t * pkg)
 {
     siridb_handle_t * handle =
-            (siridb_handle_t *) imap_pop(conn->imap, (uint64_t) pkg->pid);
+            (siridb_handle_t *) imap_pop(siridb->imap, (uint64_t) pkg->pid);
 
     if (handle == NULL)
     {

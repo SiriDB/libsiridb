@@ -26,11 +26,24 @@ struct siridb_pkg_s
 };
 
 siridb_pkg_t * sirinet_pkg_create(
-        uint8_t tp,
         uint16_t pid,
-        uint32_t len,
-        const unsigned char * data);
+        uint8_t tp,
+        const unsigned char * data,
+        uint32_t len);
+
+siridb_pkg_t * siridb_pkg_auth(
+    uint16_t pid,
+    const char * username,
+    const char * password,
+    const char * dbname);
+
+siridb_pkg_t * siridb_pkg_query(
+    const char * query,
+    uint16_t timeout);
 
 siridb_pkg_t * siridb_pkg_dup(siridb_pkg_t * pkg);
+
+#define siridb_pkg_set_checkbit(PKG) PKG->checkbit = PKG->tp ^ 255
+#define siridb_pkg_check_bit(PKG) PKG->checkbit == (PKG->tp ^ 255)
 
 #endif /* SIRIDB_PKG_H_ */

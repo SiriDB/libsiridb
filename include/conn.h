@@ -8,16 +8,19 @@
 #ifndef SIRIDB_CONN_H_
 #define SIRIDB_CONN_H_
 
+#include <inttypes.h>
+#include <imap.h>
+
 typedef struct siridb_conn_s siridb_conn_t;
 
 struct siridb_conn_s
 {
+    void * data;  /* public */
     uint16_t pid;
-    char * username;
-    char * password;
-    char * dbname;
     imap_t * imap;
-    void * _conn;  /* depending on implementation */
 };
+
+siridb_conn_t * siridb_conn_create(void * data);
+void siridb_conn_destroy(siridb_conn_t * conn);
 
 #endif /* SIRIDB_CONN_H_ */

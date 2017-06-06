@@ -2,7 +2,7 @@
 # Automatically-generated file. Do not edit!
 ################################################################################
 
-# Add inputs and outputs from these tool invocations to the build variables 
+# Add inputs and outputs from these tool invocations to the build variables
 C_SRCS += \
 ../src/errmap.c \
 ../src/handle.c \
@@ -12,8 +12,10 @@ C_SRCS += \
 ../src/resp.c \
 ../src/series.c \
 ../src/siridb.c \
-../src/thread.c \
-../src/uvwrap.c 
+../src/siridbuv.c \
+../src/conn.c \
+../src/packer.c \
+../src/thread.c
 
 OBJS += \
 ./src/errmap.o \
@@ -24,8 +26,10 @@ OBJS += \
 ./src/resp.o \
 ./src/series.o \
 ./src/siridb.o \
-./src/thread.o \
-./src/uvwrap.o 
+./src/siridbuv.o \
+./src/conn.o \
+./src/packer.o \
+./src/thread.o
 
 C_DEPS += \
 ./src/errmap.d \
@@ -36,9 +40,10 @@ C_DEPS += \
 ./src/resp.d \
 ./src/series.d \
 ./src/siridb.d \
-./src/thread.d \
-./src/uvwrap.d 
-
+./src/siridbuv.d \
+./src/conn.d \
+./src/packer.d \
+./src/thread.d
 
 # Each subdirectory must supply rules for building sources it contributes
 src/%.o: ../src/%.c

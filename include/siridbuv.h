@@ -4,21 +4,25 @@
  *  Created on: Jun 02, 2017
  *      Author: Jeroen van der Heijden <jeroen@transceptor.technology>
  */
-#ifdef USE_UV
 #ifndef SIRIDB_SIRIDBUV_H_
 #define SIRIDB_SIRIDBUV_H_
 
-typedef struct siridb_conn_s siridb_conn_t;
+#include <uv.h>
+#include <handle.h>
 
-struct siridb_conn_s
+struct suv_handle_s
 {
-    uint16_t pid;
-    char * username;
-    char * password;
-    char * dbname;
-    imap_t * imap;
-    void * _conn;  /* depending on implementation */
-};
+    void * data;  /* public */
+    int err_code; /* uv error code */
+}
+
+const char * siridb_uv_strerror(siridb_handle_t * handle);
+void siridb_uv_connect(
+    siridb_handle_t * handle,
+    uv_loop_t * loop,
+    const char * username,
+    const char * password,
+    const char * dbname,
+    const struct sockaddr * addr);
 
 #endif /* SIRIDB_SIRIDBUV_H_ */
-#endif /* USE_UV */

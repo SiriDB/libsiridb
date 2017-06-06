@@ -20,7 +20,13 @@
 #define ERR_DESTROYED       -10
 #define ERR_OCCUPIED        -11
 #define ERR_SOCK_WRITE      -12
-#define ERR_UNKNOWN         -30
+#define ERR_UVERR           -50
+#define ERR_UNKNOWN         -100
 
+
+#define ERRTP_DEF           0
+#define ERRTP_UV            1
+
+const char * siridb_strerror(int err);
 
 #endif /* SIRIDB_ERRMAP_H_ */
