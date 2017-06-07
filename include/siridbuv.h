@@ -8,12 +8,22 @@
 #define SIRIDB_SIRIDBUV_H_
 
 #include <uv.h>
-#include <handle.h>
+#include <req.h>
+
+typedef struct suv_s suv_t;
 
 struct suv_handle_s
 {
     void * data;  /* public */
     int err_code; /* uv error code */
+}
+
+struct suv_s
+{
+    uv_tcp_t tcp;
+    char * buf;
+    size_t len;
+    size_t size;
 }
 
 const char * siridb_uv_strerror(siridb_handle_t * handle);

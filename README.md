@@ -17,3 +17,5 @@ Creates a new SiriDB Client instance.
 ```
 siridb_handle_create(siridb_t * siridb, )
 ```
+
+

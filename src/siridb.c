@@ -21,31 +21,31 @@
 #include <errno.h>
 #include <assert.h>
 
-void siridb_send(siridb_handle_t * handle, siridb_pkg_t * pkg)
+void siridb_send(siridb_req_t * req, siridb_pkg_t * pkg)
 {
-    assert (handle->pkg == NULL);
+    assert (req->pkg == NULL);
 
-    handle->pkg = pkg;
+    req->pkg = pkg;
 
     /* set next pid */
-    pkg->pid = handle->conn->pid++;
+    pkg->pid = req->conn->pid++;
 
-    int rc = imap_add(handle->conn->imap, pkg->pid, (void *) handle);
+    int rc = imap_add(req->conn->imap, pkg->pid, (void *) req);
 
     if (rc == ERR_MEM_ALLOC)
     {
-        handle->status = ERR_MEM_ALLOC;
-        handle->cb(handle);
+        req->status = ERR_MEM_ALLOC;
+        req->cb(req);
         return;
     }
 
     if (rc == ERR_OCCUPIED)
     {
-        siridb_handle_t * prev;
-        prev = (siridb_handle_t *) imap_pop(handle->conn->imap, pkg->pid);
+        siridb_req_t * prev;
+        prev = (siridb_req_t *) imap_pop(req->conn->imap, pkg->pid);
         assert (prev != NULL);
 
-        // error, a previous handle with this pid is found
+        // error, a previous req with this pid is found
         prev->status = ERR_NO_REPLY;
         prev->cb(prev);
     }
@@ -53,10 +53,10 @@ void siridb_send(siridb_handle_t * handle, siridb_pkg_t * pkg)
     /* set the correct check bit */
     pkg->checkbit = pkg->tp ^ 255;
 
-    siridb__write(handle, pkg);
+    siridb__write(req, pkg);
 }
 
-void siridb_query(siridb_handle_t * handle, const char * query)
+void siridb_query(siridb_req_t * req, const char * query)
 {
     siridb_packer_t * packer;
     if (
@@ -65,29 +65,29 @@ void siridb_query(siridb_handle_t * handle, const char * query)
         qp_add_raw(packer, query, strlen(query)) ||
         qp_close_array(packer))
     {
-        handle->status = ERR_MEM_ALLOC;
-        handle->cb(handle);
+        req->status = ERR_MEM_ALLOC;
+        req->cb(req);
     }
     else
     {
-        siridb_send(handle, siridb_packer_2pkg(packer, CprotoReqQuery));
+        siridb_send(req, siridb_packer_2pkg(packer, CprotoReqQuery));
     }
 }
 
 void siridb_on_pkg(siridb_t * siridb, siridb_pkg_t * pkg)
 {
-    siridb_handle_t * handle =
-            (siridb_handle_t *) imap_pop(siridb->imap, (uint64_t) pkg->pid);
+    siridb_req_t * req =
+            (siridb_req_t *) imap_pop(siridb->imap, (uint64_t) pkg->pid);
 
-    if (handle == NULL)
+    if (req == NULL)
     {
-        printf("error: handle not found, most likely it was cancelled\n");
+        printf("error: req not found, most likely it was cancelled\n");
         return;
     }
 
-    handle->pkg = siridb_pkg_dup(pkg);
-    handle->status = (handle->pkg == NULL) ? ERR_MEM_ALLOC : 0;
-    handle->cb(handle);
+    req->pkg = siridb_pkg_dup(pkg);
+    req->status = (req->pkg == NULL) ? ERR_MEM_ALLOC : 0;
+    req->cb(req);
 }
 
 // id siridb_read_data(void * arg)
@@ -167,12 +167,12 @@ void siridb_on_pkg(siridb_t * siridb, siridb_pkg_t * pkg)
 //     }
 // }
 
-// int siridb_connect(siridb_handle_t * handle)
+// int siridb_connect(siridb_req_t * req)
 // {
 //     return siridb_thread_create(
-//             &handle->conn->connthread,
+//             &req->conn->connthread,
 //             siridb__connect,
-//             handle);
+//             req);
 // }
 
 // static void siridb__connect(void * arg)
@@ -195,29 +195,29 @@ void siridb_on_pkg(siridb_t * siridb, siridb_pkg_t * pkg)
 //     memcpy(&sin.sin_addr, hp->h_addr_list[0], hp->h_length);
 
 
-//     siridb_handle_t * handle = (siridb_handle_t *) arg;
-//     siridb_t * conn = handle->conn;
+//     siridb_req_t * req = (siridb_req_t *) arg;
+//     siridb_t * conn = req->conn;
 //     qp_packer_t * packer;
 
 //     if ((conn->sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 //     {
 //         /* TODO: check errno for more details */
-//         handle->status = ERR_SOCK_FD;
-//         conn->cb(handle);
+//         req->status = ERR_SOCK_FD;
+//         conn->cb(req);
 //     }
 //     else if (connect(conn->sockfd, (struct sockaddr *) &sin, sizeof(sin)) < 0)
 //     {
 //         /* TODO: check errno for more details */
 //         int e = errno;
 //         printf("error: %s\n", strerror(e));
-//         handle->status = ERR_SOCK_CONNECT;
-//         conn->cb(handle);
+//         req->status = ERR_SOCK_CONNECT;
+//         conn->cb(req);
 //     }
 //     else if (siridb_thread_create(&conn->thread, siridb_read_data, conn))
 //     {
 //         // TODO: error handling...
-//         handle->status = ERR_THREAD_START;
-//         conn->cb(handle);
+//         req->status = ERR_THREAD_START;
+//         conn->cb(req);
 //     }
 //     else if (
 //         (packer = siridb_packer_create(512)) == NULL ||
@@ -227,8 +227,8 @@ void siridb_on_pkg(siridb_t * siridb, siridb_pkg_t * pkg)
 //         qp_add_raw(packer, conn->dbname, strlen(conn->dbname)) ||
 //         qp_close_array(packer))
 //     {
-//         handle->status = ERR_MEM_ALLOC;
-//         conn->cb(handle);
+//         req->status = ERR_MEM_ALLOC;
+//         conn->cb(req);
 //     }
 //     else
 //     {
@@ -237,7 +237,7 @@ void siridb_on_pkg(siridb_t * siridb, siridb_pkg_t * pkg)
 //                 conn->pid++,
 //                 packer->len,
 //                 packer->buffer);
-//         siridb_send(handle, pkg);
+//         siridb_send(req, pkg);
 //         free(pkg);
 //         qp_packer_destroy(packer);
 //     }

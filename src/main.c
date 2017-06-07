@@ -184,56 +184,136 @@ static void close_handlers(void)
     uv_run(loop, UV_RUN_DEFAULT);
 }
 
-static void on_connect(siridb_handle_t * handle)
+static void auth_cb(siridb_req_t req)
 {
-    printf("OnConnect: %d (%s)\n", handle->status, siridb_uv_strerror(handle));
-    siridb_handle_destroy(handle);
+    printf("On Auth Cb");
 }
 
-static void auth_cb(siridb_handle_t handle)
-{
+const char * SERVER = "127.0.0.1";
+const int PORT = 9000;
+const char * USER = "iris";
+const char * PASSWD = "siri";
+const char * DBNAME = "dbtest";
+const int SUGGESTED_SIZE = 65536;
 
+static void write_cb(uv_write_t * uvreq, int status)
+{
+    if (status)
+    {
+        /* error handling */
+        printf("cannot write to socket: %s\n",  uv_strerror(status));
+    }
+    /* free siridb_pkg_t */
+    free(uvreq->data);
+
+    /* free uv_write_t */
+    free(uvreq);
 }
 
-static void connect_cb(uv_connect_t * req, int status)
+
+static void connect_cb(uv_connect_t * uvreq, int status)
 {
     if (status != 0)
     {
         /* error handling */
+        printf("cannot create connection: %s\n",  uv_strerror(status));
     }
     else
     {
-        siridb_t * siridb = (siridb_t *) req->handle->data;
-        siridb_pkg_t * pkg = (siridb_pkg_t *) req->data;
-        siridb_handle_create(siridb, pkg, req->data, auth_cb, NULL);
+        uv_read_start(uvreq->handle, alloc_buffer, on_data);
+
+        siridb_t * siridb = (siridb_t *) uvreq->data;
+        siridb_req_t * req = siridb_req_create(siridb, auth_cb);
+        /* check for not NULL */
+
+        siridb_pkg_t * pkg = siridb_pkg_auth(req->pid, USER, PASSWD, DBNAME);
+        /* check for not NULL */
+
+        uv_write_t * uvreq = (uv_write_t *) malloc(sizeof(uv_write_t));
+        /* check for not NULL */
+
+        /* we bind pkg to data so we can free pkg when write is done */
+        uvreq->data = pkg;
+
+        uv_buf_t buf = uv_buf_init(
+                (char *) pkg,
+                sizeof(siridb_pkg_t) + pkg->len);
+
+
+        uv_write(req, (uv_stream_t *) uvreq->handle, &buf, 1, write_cb);
     }
+}
+
+typedef struct store_s store_t;
+
+struct store_s
+{
+    char * buf;
+    size_t len;
+    size_t size;
+}
+
+static void alloc_buffer(uv_handle_t * handle, size_t sug_size, uv_buf_t * buf)
+{
+    store_t * store = (store_t *) handle->data;
+
+    if (store->buf == NULL)
+    {
+        /* check for not NULL */
+        store->buf = (char *) malloc(sug_size);
+        store->size = sug_size;
+        store->len = 0;
+    }
+    buf->base = store->buf + store->len;
+    buf->len = store->size - store->len;
+}
+
+void on_data(uv_stream_t * client, ssize_t nread, const uv_buf_t * buf)
+{
+    store_t * store = (store_t *) client->data;
+
+    if (nread < 0)
+    {
+        if (nread != UV_EOF)
+        {
+            printf("read error: %s\n", uv_err_name(nread));
+            /* error handling */
+        }
+        uv_close((uv_handle_t *) client, NULL);
+        return;
+    }
+
+    store->len += nread;
+
+    if (store->len > )
+
 }
 
 int main(void)
 {
-    siridb_handle_t * handle;
-    uv_tcp_t * tcp = = (uv_tcp_t *) malloc(sizeof(uv_tcp_t));
-    struct sockaddr_in dest;
+    uv_tcp_t tcp;
+    struct sockaddr_in addr;
     uv_idle_t idler;
 
     loop = (uv_loop_t *) malloc(sizeof(uv_loop_t));
+    /* check for not NULL */
     uv_loop_init(loop);
 
     uv_idle_init(loop, &idler);
     uv_idle_start(&idler, wait_for_a_while);
 
-    uv_ip4_addr("127.0.0.1", 9000, &dest);
+    uv_ip4_addr(SERVER, PORT, &addr);
 
     siridb_t * siridb = siridb_create();
+    /* check for not NULL */
 
-    uv_connect_t * req = (uv_connect_t *) malloc(sizeof(uv_connect_t));
-    /* error handling */
+    uv_connect_t * uvreq = (uv_connect_t *) malloc(sizeof(uv_connect_t));
+    /* check for not NULL */
 
-    req->data = (void *) siridb_pkg_auth("iris", "siri", "dbtest");
-    tcp->data = (void *) siridb;
+    uvreq->data = (void *) siridb;
 
     uv_tcp_init(loop, &tcp);
-    uv_tcp_connect(req, &tcp, (struct sockaddr) addr, connect_cb);
+    uv_tcp_connect(uvreq, &tcp, (struct sockaddr *) &addr, connect_cb);
 
     // siridb_uv_connect(
     //     handle,
