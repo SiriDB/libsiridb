@@ -14,15 +14,7 @@
 #include <qpack.h>
 #include <resp.h>
 
-typedef struct suv_buf_s suv_buf_t;
 
-struct suv_buf_s
-{
-    char * buf;
-    size_t len;
-    size_t size;
-    siridb_t * siridb;
-};
 
 int results = 0;
 uv_loop_t * loop;
@@ -202,26 +194,6 @@ const char * PASSWD = "siri";
 const char * DBNAME = "dbtest";
 const int SUGGESTED_BUF_SIZE = 65536;
 
-static void write_cb(uv_write_t * uvreq, int status)
-{
-    siridb_req_t * req = (siridb_req_t *) uvreq->data;
-    if (status)
-    {
-        /* error handling */
-        printf("cannot write to socket: %s\n",  uv_strerror(status));
-
-        /* remove request from queue */
-        queue_pop(req->siridb->queue, pkg->pid);
-        req->status = ERR_SOCK_WRITE;
-        req->cb(req);
-    }
-    /* free siridb_pkg_t */
-    free(req->data);
-
-    /* free uv_write_t */
-    free(uvreq);
-}
-
 
 static void connect_cb(uv_connect_t * uvreq, int status)
 {
@@ -232,22 +204,20 @@ static void connect_cb(uv_connect_t * uvreq, int status)
     }
     else
     {
-        uv_read_start(uvreq->handle, alloc_buffer, on_data);
+        uv_read_start(uvreq->handle, suv_alloc_buffer, suv_on_data);
 
         suv_buf_t * suvbf = (suv_buf_t *) uvreq->handle->data;
-        printf("Here.1..%p\n", suvbf);
-        printf("Here.2..%p\n", suvbf->siridb);
 
         siridb_req_t * req = siridb_req_create(suvbf->siridb, auth_cb, NULL);
-        /* check for not NULL or use rc code instead of NULL */
+        /* TODO: handle req == NULL or use rc code */
 
         siridb_pkg_t * pkg = siridb_pkg_auth(req->pid, USER, PASSWD, DBNAME);
-        /* check for not NULL */
+        /* TODO: handle authreq == NULL */
 
         printf("Here.3..%p\n", pkg);
 
         uv_write_t * authreq = (uv_write_t *) malloc(sizeof(uv_write_t));
-        /* check for not NULL */
+        /* TODO: handle authreq == NULL */
 
         printf("Here.4..%p\n", authreq);
 
@@ -268,100 +238,9 @@ static void connect_cb(uv_connect_t * uvreq, int status)
     free(uvreq);
 }
 
-suv_buf_t * suv_buf_create(siridb_t * siridb)
-{
-    suv_buf_t * suvbf = (suv_buf_t *) malloc(sizeof(suv_buf_t));
-    if (suvbf != NULL)
-    {
-        suvbf->siridb = siridb;
-        suvbf->len = 0;
-        suvbf->size = 0;
-        suvbf->buf = NULL;
-    }
-    return suvbf;
-}
 
-void suv_buf_destroy(suv_buf_t * suvbf)
-{
-    free(suvbf->buf);
-    free(suvbf);
-}
 
-void alloc_buffer(uv_handle_t * handle, size_t sug_sz, uv_buf_t * buf)
-{
-    suv_buf_t * suvbf = (suv_buf_t *) handle->data;
-    printf("Alloc buffer...\n");
-    if (suvbf->len == 0 && suvbf->size != sug_sz)
-    {
-        free(suvbf->buf);
-        suvbf->buf = (char *) malloc(sug_sz);
-        suvbf->size = sug_sz;
-        suvbf->len = 0;
-    }
 
-    buf->base = suvbf->buf + suvbf->len;
-    buf->len = suvbf->size - suvbf->len;
-}
-
-void on_data(uv_stream_t * client, ssize_t nread, const uv_buf_t * buf)
-{
-    suv_buf_t * suvbf = (suv_buf_t *) client->data;
-    siridb_pkg_t * pkg;
-    size_t total_sz;
-
-    if (nread < 0)
-    {
-        if (nread != UV_EOF)
-        {
-            printf("read error: %s\n", uv_err_name(nread));
-        }
-
-        /* cleanup */
-        siridb_suvbuf_destroy(suvbf);
-        uv_close((uv_handle_t *) client, NULL);
-        return;
-    }
-
-    suvbf->len += nread;
-
-    if (suvbf->len < sizeof(siridb_pkg_t))
-    {
-        return;
-    }
-
-    printf("Got data...\n");
-
-    pkg = (siridb_pkg_t *) suvbf->buf;
-    if (!siridb_pkg_check_bit(pkg))
-    {
-        /* handle invalid pkg */
-    }
-
-    total_sz = sizeof(siridb_pkg_t) + pkg->len;
-
-    if (suvbf->len < total_sz)
-    {
-        if (suvbf->size < total_sz)
-        {
-            char * tmp = realloc(suvbf->buf, total_sz);
-            /* handle tmp == NULL */
-            suvbf->buf = tmp;
-            suvbf->size = total_sz;
-        }
-        return;
-    }
-
-    siridb_on_pkg(suvbf->siridb, pkg);
-
-    suvbf->len -= total_sz;
-
-    if (suvbf->len > 0)
-    {
-        /* move data and call on_data() function again */
-        memmove(suvbf->buf, suvbf->buf + total_sz, suvbf->len);
-        on_data(client, 0, buf);
-    }
-}
 
 int _main(void)
 {
