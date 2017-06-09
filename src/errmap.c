@@ -17,15 +17,16 @@ const char * siridb_strerror(int err)
     case ERR_MEM_ALLOC:     return "memory allocation failed";
     case ERR_SOCK_FD:       return "cannot create socket file descriptor";
     case ERR_SOCK_CONNECT:  return "cannot open socket";
-    case ERR_NOT_FINISHED:  return "handle is not finished";
+    case ERR_PENDING:       return "request is pending";
     case ERR_THREAD_START:  return "cannot start thread";
     case ERR_NO_REPLY:      return "overwritten before reply";
     case ERR_CANCELLED:     return "handle is cancelled";
     case ERR_INVALID_STAT:  return "invalid handle status";
     case ERR_CORRUPT:       return "data is corrupt";
     case ERR_DESTROYED:     return "handle is destroyed";
-    case ERR_OCCUPIED:      return "position already occupied";
+    case ERR_OVERWRITTEN:   return "request is overwritten before handled";
     case ERR_SOCK_WRITE:    return "cannot write to socket";
+    case ERR_OCCUPIED:      return "already occupied";
     case ERR_UNKNOWN:
     default:                return "unknown";
     }

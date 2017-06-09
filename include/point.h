@@ -8,16 +8,19 @@
 #ifndef SIRIDB_POINT_H_
 #define SIRIDB_POINT_H_
 
+/* type definitions */
 typedef union siridb_point_u siridb_point_via_t;
 typedef struct siridb_point_s siridb_point_t;
 
+/* unions */
 union siridb_point_u
 {
     int64_t int64;
     double real;
-    char * str;     /* null terminated string */
+    char * str;                 /* null terminated string */
 };
 
+/* struct definitions */
 struct siridb_point_s
 {
     uint64_t ts;                /* time-stamp */

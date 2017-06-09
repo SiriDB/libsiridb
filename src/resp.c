@@ -53,35 +53,47 @@ static const char * count_types[] = {
  * Returns 0 if successful or a negative value in case of an error.
  *
  */
-int siridb_resp_init(siridb_resp_t * resp, siridb_handle_t * handle)
+siridb_resp_t * siridb_resp_create(siridb_req_t * req, int * rc)
 {
+    int fallb;
+    int * rcode = (rc == NULL) ? &fallb : rc;
+    siridb_resp_t * resp;
+
+    if (req->status != 0)
+    {
+        *rcode = ERR_INVALID_STAT;
+        return NULL;
+    }
+
+    resp = (siridb_resp_t *) malloc(sizeof(siridb_resp_t));
+    if (resp == NULL)
+    {
+        *rcode = ERR_MEM_ALLOC;
+        return NULL;
+    }
+
     resp->tp = SIRIDB_RESP_TP_UNDEF;
     resp->timeit = NULL;
 
-    if (handle->status != 0)
-    {
-        return ERR_INVALID_STAT;
-    }
+    assert (req->pkg != NULL);
 
-    assert (handle->pkg != NULL);
-
-    switch(handle->pkg->tp)
+    switch(req->pkg->tp)
     {
     case CprotoResQuery:
-        return siridb_resp_query(resp, handle->pkg);
-
+        *rcode = siridb_resp_query(resp, req->pkg);
+        break;
     case CprotoResInfo:
     case CprotoAckAdminData:
-        return siridb_resp_data(resp, handle->pkg);
-
+        *rcode = siridb_resp_data(resp, req->pkg);
+        break;
     case CprotoResInsert:
-        return siridb_resp_success_msg(resp, handle->pkg);
-
+        *rcode = siridb_resp_success_msg(resp, req->pkg);
+        break;
     case CprotoResAuthSuccess:
     case CprotoResAck:
     case CprotoAckAdmin:
-        return siridb_resp_success(resp, handle->pkg->tp);
-
+        *rcode = siridb_resp_success(resp, req->pkg->tp);
+        break;
     case CprotoErrMsg:
     case CprotoErrUserAccess:
     case CprotoErrPool:
@@ -89,13 +101,19 @@ int siridb_resp_init(siridb_resp_t * resp, siridb_handle_t * handle)
     case CprotoErrQuery:
     case CprotoErrInsert:
     case CprotoErrAdmin:
-        return siridb_resp_error_msg(resp, handle->pkg);
-
+        *rcode = siridb_resp_error_msg(resp, req->pkg);
+        break;
     default:
-        return siridb_resp_error(resp, handle->pkg->tp);
+        *rcode = siridb_resp_error(resp, req->pkg->tp);
     }
 
-    return ERR_CORRUPT;
+    if (*rcode)
+    {
+        siridb_resp_destroy(resp);
+        resp = NULL;
+    }
+
+    return resp;
 }
 
 void siridb_resp_destroy(siridb_resp_t * resp)
@@ -155,6 +173,7 @@ void siridb_resp_destroy(siridb_resp_t * resp)
     default:
         assert(0);
     }
+    free(resp);
 }
 
 static int siridb_resp_success(siridb_resp_t * resp, uint8_t tp)

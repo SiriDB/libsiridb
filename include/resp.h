@@ -9,7 +9,8 @@
 #define SIRIDB_RESP_H_
 
 #include <qpack.h>
-#include <series.h>
+#include "series.h"
+#include "req.h"
 
 /* response definitions */
 typedef enum siridb_resp_e siridb_resp_tp;
@@ -24,6 +25,7 @@ typedef struct siridb_timeit_s siridb_timeit_t;
 typedef struct siridb_item_s siridb_item_t;
 typedef struct siridb_perf_s siridb_perf_t;
 
+/* enumerators */
 enum siridb_resp_e
 {
     SIRIDB_RESP_TP_UNDEF=0,
@@ -41,6 +43,7 @@ enum siridb_resp_e
     SIRIDB_RESP_TP_MOTD     /* only when SiriDB server is in debug mode */
 };
 
+/* unions */
 union siridb_resp_u {
     siridb_select_t * select;
     siridb_list_t * list;
@@ -56,6 +59,11 @@ union siridb_resp_u {
     char * motd;  /* only when SiriDB server is in debug mode */
 };
 
+/* public functions */
+siridb_resp_t * siridb_resp_create(siridb_req_t * req, int * rc);
+void siridb_resp_destroy(siridb_resp_t * resp);
+
+/* struct definitions */
 struct siridb_resp_s
 {
     siridb_resp_tp tp;

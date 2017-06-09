@@ -5,7 +5,7 @@
  *      Author: Jeroen van der Heijden <jeroen@transceptor.technology>
  */
 
-#include <series.h>
+#include <siridb.h>
 #include <stdlib.h>
 #include <string.h>
 

@@ -1,67 +1,67 @@
 /*
- * imap.c
+ * queue.c
  *
  *  Created on: Apr 07, 2017
  *      Author: Jeroen van der Heijden <jeroen@transceptor.technology>
  */
 
-#include <imap.h>
+#include <queue.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <errmap.h>
 
-#define IMAP_NODE_SZ 32
+#define QUEUE_NODE_SZ 32
 
-static void IMAP_node_free(imap_node_t * node);
-static void IMAP_node_free_cb(imap_node_t * node, imap_free_cb cb);
-static int IMAP_add(imap_node_t * node, uint64_t id, void * data);
-static void * IMAP_get(imap_node_t * node, uint64_t id);
-static void * IMAP_pop(imap_node_t * node, uint64_t id);
-static void IMAP_walk(imap_node_t * node, imap_cb cb, void * data, int * rc);
+static void queue__node_free(queue_node_t * node);
+static void queue__node_free_cb(queue_node_t * node, queue_cb cb);
+static int queue__add(queue_node_t * node, uint64_t id, void * data);
+static void * queue__get(queue_node_t * node, uint64_t id);
+static void * queue__pop(queue_node_t * node, uint64_t id);
+static void queue__walk(queue_node_t * node, queue_cb cb, int * rc);
 
 
 /*
  * Returns NULL in case an allocation error has occurred.
  */
-imap_t * imap_create(void)
+queue_t * queue_create(void)
 {
-    imap_t * imap = (imap_t *) calloc(
+    queue_t * queue = (queue_t *) calloc(
             1,
-            sizeof(imap_t) + IMAP_NODE_SZ * sizeof(imap_node_t));
+            sizeof(queue_t) + QUEUE_NODE_SZ * sizeof(queue_node_t));
 
-    if (imap != NULL)
+    if (queue != NULL)
     {
-        imap->len = 0;
+        queue->len = 0;
     }
-    return imap;
+    return queue;
 }
 
 /*
- * Destroy imap with optional call-back function.
+ * Destroy queue with optional call-back function.
  */
-void imap_destroy(imap_t * imap, imap_free_cb cb)
+void queue_destroy(queue_t * queue, queue_cb cb)
 {
-    if (imap->len)
+    if (queue->len)
     {
-        imap_node_t * nd;
+        queue_node_t * nd;
 
         if (cb == NULL)
         {
-            for (uint8_t i = 0; i < IMAP_NODE_SZ; i++)
+            for (uint8_t i = 0; i < QUEUE_NODE_SZ; i++)
             {
-                nd = imap->nodes + i;
+                nd = queue->nodes + i;
 
                 if (nd->nodes != NULL)
                 {
-                    IMAP_node_free(nd);
+                    queue__node_free(nd);
                 }
             }
         }
         else
         {
-            for (uint8_t i = 0; i < IMAP_NODE_SZ; i++)
+            for (uint8_t i = 0; i < QUEUE_NODE_SZ; i++)
             {
-                nd = imap->nodes + i;
+                nd = queue->nodes + i;
 
                 if (nd->data != NULL)
                 {
@@ -70,13 +70,13 @@ void imap_destroy(imap_t * imap, imap_free_cb cb)
 
                 if (nd->nodes != NULL)
                 {
-                    IMAP_node_free_cb(nd, cb);
+                    queue__node_free_cb(nd, cb);
                 }
             }
         }
     }
 
-    free(imap);
+    free(queue);
 }
 
 /*
@@ -88,14 +88,14 @@ void imap_destroy(imap_t * imap, imap_free_cb cb)
  *   ERR_OCCUPIED   : when the id already exists
  *   ERR_MEM_ALLOC  : memory allocation error has occurred
  */
-int imap_add(imap_t * imap, uint64_t id, void * data)
+int queue_add(queue_t * queue, uint64_t id, void * data)
 {
     /* insert NULL is not allowed */
     assert (data != NULL);
 
     int rc = 0;
-    imap_node_t * nd = imap->nodes + (id % IMAP_NODE_SZ);
-    id /= IMAP_NODE_SZ;
+    queue_node_t * nd = queue->nodes + (id % QUEUE_NODE_SZ);
+    id /= QUEUE_NODE_SZ;
 
     if (!id)
     {
@@ -104,12 +104,12 @@ int imap_add(imap_t * imap, uint64_t id, void * data)
             return ERR_OCCUPIED;
         }
 
-        imap->len++;
+        queue->len++;
         nd->data = data;
     }
-    else if ((rc = IMAP_add(nd, id - 1, data)) == 0)
+    else if ((rc = queue__add(nd, id - 1, data)) == 0)
     {
-        imap->len++;
+        queue->len++;
     }
 
     return rc;
@@ -118,31 +118,31 @@ int imap_add(imap_t * imap, uint64_t id, void * data)
 /*
  * Returns data by a given id, or NULL when not found.
  */
-void * imap_get(imap_t * imap, uint64_t id)
+void * queue_get(queue_t * queue, uint64_t id)
 {
-    imap_node_t * nd = imap->nodes + (id % IMAP_NODE_SZ);
-    id /= IMAP_NODE_SZ;
+    queue_node_t * nd = queue->nodes + (id % QUEUE_NODE_SZ);
+    id /= QUEUE_NODE_SZ;
 
     if (!id)
     {
         return nd->data;
     }
 
-    return (nd->nodes == NULL) ? NULL : IMAP_get(nd, id - 1);
+    return (nd->nodes == NULL) ? NULL : queue__get(nd, id - 1);
 }
 
 /*
  * Remove and return an item by id or return NULL in case the id is not found.
  */
-void * imap_pop(imap_t * imap, uint64_t id)
+void * queue_pop(queue_t * queue, uint64_t id)
 {
     void * data;
-    imap_node_t * nd = imap->nodes + (id % IMAP_NODE_SZ);
-    id /= IMAP_NODE_SZ;
+    queue_node_t * nd = queue->nodes + (id % QUEUE_NODE_SZ);
+    id /= QUEUE_NODE_SZ;
 
     if (id)
     {
-        data = (nd->nodes == NULL) ? NULL : IMAP_pop(nd, id - 1);
+        data = (nd->nodes == NULL) ? NULL : queue__pop(nd, id - 1);
     }
     else if ((data = nd->data) != NULL)
     {
@@ -151,7 +151,7 @@ void * imap_pop(imap_t * imap, uint64_t id)
 
     if (data != NULL)
     {
-        imap->len--;
+        queue->len--;
     }
 
     return data;
@@ -163,26 +163,26 @@ void * imap_pop(imap_t * imap, uint64_t id)
  * All the results are added together and are returned as the result of
  * this function.
  */
-int imap_walk(imap_t * imap, imap_cb cb, void * data)
+int queue_walk(queue_t * queue, queue_cb cb)
 {
     int rc = 0;
 
-    if (imap->len)
+    if (queue->len)
     {
-        imap_node_t * nd;
+        queue_node_t * nd;
 
-        for (uint8_t i = 0; i < IMAP_NODE_SZ; i++)
+        for (uint8_t i = 0; i < QUEUE_NODE_SZ; i++)
         {
-            nd = imap->nodes + i;
+            nd = queue->nodes + i;
 
             if (nd->data != NULL)
             {
-                rc += (*cb)(nd->data, data);
+                rc += (*cb)(nd->data);
             }
 
             if (nd->nodes != NULL)
             {
-                IMAP_walk(nd, cb, data, &rc);
+                queue__walk(nd, cb, &rc);
             }
         }
     }
@@ -190,26 +190,26 @@ int imap_walk(imap_t * imap, imap_cb cb, void * data)
     return rc;
 }
 
-static void IMAP_node_free(imap_node_t * node)
+static void queue__node_free(queue_node_t * node)
 {
-    imap_node_t * nd;
+    queue_node_t * nd;
 
-    for (uint8_t i = 0; i < IMAP_NODE_SZ; i++)
+    for (uint8_t i = 0; i < QUEUE_NODE_SZ; i++)
     {
         if ((nd = node->nodes + i)->nodes != NULL)
         {
-            IMAP_node_free(nd);
+            queue__node_free(nd);
         }
     }
 
     free(node->nodes);
 }
 
-static void IMAP_node_free_cb(imap_node_t * node, imap_free_cb cb)
+static void queue__node_free_cb(queue_node_t * node, queue_cb cb)
 {
-    imap_node_t * nd;
+    queue_node_t * nd;
 
-    for (uint8_t i = 0; i < IMAP_NODE_SZ; i++)
+    for (uint8_t i = 0; i < QUEUE_NODE_SZ; i++)
     {
         nd = node->nodes + i;
 
@@ -220,7 +220,7 @@ static void IMAP_node_free_cb(imap_node_t * node, imap_free_cb cb)
 
         if (nd->nodes != NULL)
         {
-            IMAP_node_free_cb(nd, cb);
+            queue__node_free_cb(nd, cb);
         }
     }
     free(node->nodes);
@@ -231,13 +231,13 @@ static void IMAP_node_free_cb(imap_node_t * node, imap_free_cb cb)
  *
  * Returns 0 when successful or a negative value in case of an error.
  */
-static int IMAP_add(imap_node_t * node, uint64_t id, void * data)
+static int queue__add(queue_node_t * node, uint64_t id, void * data)
 {
     if (!node->size)
     {
-        node->nodes = (imap_node_t *) calloc(
-                IMAP_NODE_SZ,
-                sizeof(imap_node_t));
+        node->nodes = (queue_node_t *) calloc(
+                QUEUE_NODE_SZ,
+                sizeof(queue_node_t));
 
         if (node->nodes == NULL)
         {
@@ -246,8 +246,8 @@ static int IMAP_add(imap_node_t * node, uint64_t id, void * data)
     }
 
     int rc;
-    imap_node_t * nd = node->nodes + (id % IMAP_NODE_SZ);
-    id /= IMAP_NODE_SZ;
+    queue_node_t * nd = node->nodes + (id % QUEUE_NODE_SZ);
+    id /= QUEUE_NODE_SZ;
 
     if (!id)
     {
@@ -262,7 +262,7 @@ static int IMAP_add(imap_node_t * node, uint64_t id, void * data)
         return 0;
     }
 
-    if ((rc = IMAP_add(nd, id - 1, data)) == 0)
+    if ((rc = queue__add(nd, id - 1, data)) == 0)
     {
         node->size++;
     }
@@ -270,24 +270,24 @@ static int IMAP_add(imap_node_t * node, uint64_t id, void * data)
     return rc;
 }
 
-static void * IMAP_get(imap_node_t * node, uint64_t id)
+static void * queue__get(queue_node_t * node, uint64_t id)
 {
-    imap_node_t * nd = node->nodes + (id % IMAP_NODE_SZ);
-    id /= IMAP_NODE_SZ;
+    queue_node_t * nd = node->nodes + (id % QUEUE_NODE_SZ);
+    id /= QUEUE_NODE_SZ;
 
     if (!id)
     {
         return nd->data;
     }
 
-    return (nd->nodes == NULL) ? NULL : IMAP_get(nd, id - 1);
+    return (nd->nodes == NULL) ? NULL : queue__get(nd, id - 1);
 }
 
-static void * IMAP_pop(imap_node_t * node, uint64_t id)
+static void * queue__pop(queue_node_t * node, uint64_t id)
 {
     void * data;
-    imap_node_t * nd = node->nodes + (id % IMAP_NODE_SZ);
-    id /= IMAP_NODE_SZ;
+    queue_node_t * nd = node->nodes + (id % QUEUE_NODE_SZ);
+    id /= QUEUE_NODE_SZ;
 
     if (!id)
     {
@@ -307,7 +307,7 @@ static void * IMAP_pop(imap_node_t * node, uint64_t id)
         return data;
     }
 
-    data = (nd->nodes == NULL) ? NULL : IMAP_pop(nd, id - 1);
+    data = (nd->nodes == NULL) ? NULL : queue__pop(nd, id - 1);
 
     if (data != NULL && !--node->size)
     {
@@ -318,22 +318,22 @@ static void * IMAP_pop(imap_node_t * node, uint64_t id)
     return data;
 }
 
-static void IMAP_walk(imap_node_t * node, imap_cb cb, void * data, int * rc)
+static void queue__walk(queue_node_t * node, queue_cb cb, int * rc)
 {
-    imap_node_t * nd;
+    queue_node_t * nd;
 
-    for (uint8_t i = 0; i < IMAP_NODE_SZ; i++)
+    for (uint8_t i = 0; i < QUEUE_NODE_SZ; i++)
     {
         nd = node->nodes + i;
 
         if (nd->data != NULL)
         {
-            *rc += (*cb)(nd->data, data);
+            *rc += (*cb)(nd->data);
         }
 
         if (nd->nodes != NULL)
         {
-            IMAP_walk(nd, cb, data, rc);
+            queue__walk(nd, cb, rc);
         }
     }
 }

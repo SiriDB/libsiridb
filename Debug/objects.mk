@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -luv -lqpack -lpthread
+LIBS := -lqpack
 

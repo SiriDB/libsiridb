@@ -1,26 +1,26 @@
-src/resp.o: ../src/resp.c .././include/siridb.h .././include/thread.h \
- .././include/imap.h .././include/pkg.h .././include/resp.h \
- .././include/series.h .././include/point.h .././include/errmap.h \
- .././include/protomap.h .././include/handle.h .././include/conn.h
+src/resp.o: ../src/resp.c .././include/siridb.h .././include/queue.h \
+ .././include/pkg.h .././include/req.h .././include/siridb.h \
+ .././include/errmap.h .././include/protomap.h .././include/series.h \
+ .././include/point.h .././include/resp.h .././include/packer.h
 
 .././include/siridb.h:
 
-.././include/thread.h:
-
-.././include/imap.h:
+.././include/queue.h:
 
 .././include/pkg.h:
 
-.././include/resp.h:
+.././include/req.h:
 
-.././include/series.h:
-
-.././include/point.h:
+.././include/siridb.h:
 
 .././include/errmap.h:
 
 .././include/protomap.h:
 
-.././include/handle.h:
+.././include/series.h:
 
-.././include/conn.h:
+.././include/point.h:
+
+.././include/resp.h:
+
+.././include/packer.h:

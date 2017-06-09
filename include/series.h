@@ -10,7 +10,7 @@
 
 #include <qpack.h>
 #include <stddef.h>
-#include <point.h>
+#include "point.h"
 
 typedef enum siridb_series_e siridb_series_tp;
 typedef struct siridb_series_s siridb_series_t;

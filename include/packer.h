@@ -8,12 +8,14 @@
 #ifndef SIRIDB_PACKER_H_
 #define SIRIDB_PACKER_H_
 
-#include <qpack.h>
-#include <pkg.h>
 #include <inttypes.h>
+#include <qpack.h>
+#include "pkg.h"
 
-typedef qp_packer_t siridb_packer_t;
+/* type definitions */
+typedef qp_packer_t siridb_packer_t;    /* alias */
 
+/* public functions */
 siridb_packer_t * siridb_packer_create(size_t alloc_size);
 void siridb_packer_destroy(siridb_packer_t * packer);
 siridb_pkg_t * siridb_packer_2pkg(

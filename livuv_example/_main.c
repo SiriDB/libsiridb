@@ -12,10 +12,23 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <qpack.h>
-#include <siridbuv.h>
+#include <resp.h>
+
+typedef struct suv_buf_s suv_buf_t;
+
+struct suv_buf_s
+{
+    char * buf;
+    size_t len;
+    size_t size;
+    siridb_t * siridb;
+};
 
 int results = 0;
 uv_loop_t * loop;
+
+void alloc_buffer(uv_handle_t * handle, size_t sug_sz, uv_buf_t * buf);
+void on_data(uv_stream_t * client, ssize_t nread, const uv_buf_t * buf);
 
 void wait_for_a_while(uv_idle_t* handle) {
     if (results >= 2)
@@ -43,23 +56,23 @@ static void print_val(qp_res_t * val)
     }
 }
 
-static void on_data2(siridb_handle_t * handle)
+static void on_data2(siridb_req_t * req)
 {
-    printf("On Data 2...%d (pid: %u)\n", handle->status, handle->pkg->pid);
-    if (handle->status == 0)
+    printf("On Data 2...%d (pid: %u)\n", req->status, req->pkg->pid);
+    if (req->status == 0)
     {
-        siridb_resp_t resp;
-        int r = siridb_resp_init(&resp, handle);
+        int r;
+        siridb_resp_t * resp = siridb_resp_create(req, &r);
         printf("Resp parse status: %d\n", r);
-        if (resp.timeit != NULL)
+        if (resp->timeit != NULL)
         {
             printf("got timeit for server: %s with time: %f\n",
-                    resp.timeit->perfs[0].server,
-                    resp.timeit->perfs[0].time);
+                    resp->timeit->perfs[0].server,
+                    resp->timeit->perfs[0].time);
         }
-        if (resp.tp == SIRIDB_RESP_TP_SELECT)
+        if (resp->tp == SIRIDB_RESP_TP_SELECT)
         {
-            siridb_select_t * select = resp.via.select;
+            siridb_select_t * select = resp->via.select;
             printf("Select response for %lu series.\n", select->n);
             for (size_t m = 0; m < select->n; m++)
             {
@@ -69,9 +82,9 @@ static void on_data2(siridb_handle_t * handle)
                         select->series[m]->tp);
             }
         }
-        if (resp.tp == SIRIDB_RESP_TP_LIST)
+        if (resp->tp == SIRIDB_RESP_TP_LIST)
         {
-            siridb_list_t * list = resp.via.list;
+            siridb_list_t * list = resp->via.list;
             printf("List response with %lu columns and %lu rows...\n",
                     list->headers->via.array->n, list->data->via.array->n);
             for (size_t r = 0; r < list->data->via.array->n; r++)
@@ -85,18 +98,18 @@ static void on_data2(siridb_handle_t * handle)
                 printf("\n");
             }
         }
-        if (resp.tp == SIRIDB_RESP_TP_COUNT)
+        if (resp->tp == SIRIDB_RESP_TP_COUNT)
         {
-            printf("Count response: %lu\n", resp.via.count);
+            printf("Count response: %lu\n", resp->via.count);
         }
-        if (resp.tp == SIRIDB_RESP_TP_CALC)
+        if (resp->tp == SIRIDB_RESP_TP_CALC)
         {
-            printf("Calc response: %lu\n", resp.via.calc);
+            printf("Calc response: %lu\n", resp->via.calc);
         }
-        if (resp.tp == SIRIDB_RESP_TP_SHOW)
+        if (resp->tp == SIRIDB_RESP_TP_SHOW)
         {
             size_t i;
-            siridb_show_t * show = resp.via.show;
+            siridb_show_t * show = resp->via.show;
             printf("Show response with %lu items\n", show->n);
             for (i = 0; i < show->n; i++)
             {
@@ -105,33 +118,26 @@ static void on_data2(siridb_handle_t * handle)
                 printf("\n");
             }
         }
-        if (resp.tp == SIRIDB_RESP_TP_ERROR_MSG)
+        if (resp->tp == SIRIDB_RESP_TP_ERROR_MSG)
         {
-            printf("Error msg: %s\n", resp.via.error_msg);
+            printf("Error msg: %s\n", resp->via.error_msg);
         }
-        if (resp.tp == SIRIDB_RESP_TP_SUCCESS_MSG)
+        if (resp->tp == SIRIDB_RESP_TP_SUCCESS_MSG)
         {
-            printf("Success msg: %s\n", resp.via.success_msg);
+            printf("Success msg: %s\n", resp->via.success_msg);
         }
-        if (resp.tp == SIRIDB_RESP_TP_ERROR)
+        if (resp->tp == SIRIDB_RESP_TP_ERROR)
         {
-            printf("Error: %s\n", resp.via.error);
+            printf("Error: %s\n", resp->via.error);
         }
-        if (resp.tp == SIRIDB_RESP_TP_SUCCESS)
+        if (resp->tp == SIRIDB_RESP_TP_SUCCESS)
         {
-            printf("Success: %s\n", resp.via.success);
+            printf("Success: %s\n", resp->via.success);
         }
-        siridb_resp_destroy(&resp);
+        siridb_resp_destroy(resp);
     }
-    siridb_handle_destroy(handle);
-    free(handle);
+    siridb_req_destroy(req);
     results++;
-
-}
-
-static void on_data(siridb_handle_t * handle)
-{
-    printf("Here...%d\n", handle->status);
 
 }
 
@@ -184,9 +190,9 @@ static void close_handlers(void)
     uv_run(loop, UV_RUN_DEFAULT);
 }
 
-static void auth_cb(siridb_req_t req)
+static void auth_cb(siridb_req_t * req)
 {
-    printf("On Auth Cb");
+    if (!req->status)
 }
 
 const char * SERVER = "127.0.0.1";
@@ -194,17 +200,23 @@ const int PORT = 9000;
 const char * USER = "iris";
 const char * PASSWD = "siri";
 const char * DBNAME = "dbtest";
-const int SUGGESTED_SIZE = 65536;
+const int SUGGESTED_BUF_SIZE = 65536;
 
 static void write_cb(uv_write_t * uvreq, int status)
 {
+    siridb_req_t * req = (siridb_req_t *) uvreq->data;
     if (status)
     {
         /* error handling */
         printf("cannot write to socket: %s\n",  uv_strerror(status));
+
+        /* remove request from queue */
+        queue_pop(req->siridb->queue, pkg->pid);
+        req->status = ERR_SOCK_WRITE;
+        req->cb(req);
     }
     /* free siridb_pkg_t */
-    free(uvreq->data);
+    free(req->data);
 
     /* free uv_write_t */
     free(uvreq);
@@ -222,74 +234,136 @@ static void connect_cb(uv_connect_t * uvreq, int status)
     {
         uv_read_start(uvreq->handle, alloc_buffer, on_data);
 
-        siridb_t * siridb = (siridb_t *) uvreq->data;
-        siridb_req_t * req = siridb_req_create(siridb, auth_cb);
-        /* check for not NULL */
+        suv_buf_t * suvbf = (suv_buf_t *) uvreq->handle->data;
+        printf("Here.1..%p\n", suvbf);
+        printf("Here.2..%p\n", suvbf->siridb);
+
+        siridb_req_t * req = siridb_req_create(suvbf->siridb, auth_cb, NULL);
+        /* check for not NULL or use rc code instead of NULL */
 
         siridb_pkg_t * pkg = siridb_pkg_auth(req->pid, USER, PASSWD, DBNAME);
         /* check for not NULL */
 
-        uv_write_t * uvreq = (uv_write_t *) malloc(sizeof(uv_write_t));
+        printf("Here.3..%p\n", pkg);
+
+        uv_write_t * authreq = (uv_write_t *) malloc(sizeof(uv_write_t));
         /* check for not NULL */
 
-        /* we bind pkg to data so we can free pkg when write is done */
-        uvreq->data = pkg;
+        printf("Here.4..%p\n", authreq);
+
+        /* bind pkg to req->data and req to authreq->data so we can free
+         * pkg when write is done or call callback functoin on errors.
+         */
+        req->data = (void *) pkg;
+        authreq->data = (void *) req;
 
         uv_buf_t buf = uv_buf_init(
                 (char *) pkg,
                 sizeof(siridb_pkg_t) + pkg->len);
 
+        printf("Here.5..%p\n", authreq);
 
-        uv_write(req, (uv_stream_t *) uvreq->handle, &buf, 1, write_cb);
+        uv_write(authreq, (uv_stream_t *) uvreq->handle, &buf, 1, write_cb);
     }
+    free(uvreq);
 }
 
-typedef struct store_s store_t;
-
-struct store_s
+suv_buf_t * suv_buf_create(siridb_t * siridb)
 {
-    char * buf;
-    size_t len;
-    size_t size;
-}
-
-static void alloc_buffer(uv_handle_t * handle, size_t sug_size, uv_buf_t * buf)
-{
-    store_t * store = (store_t *) handle->data;
-
-    if (store->buf == NULL)
+    suv_buf_t * suvbf = (suv_buf_t *) malloc(sizeof(suv_buf_t));
+    if (suvbf != NULL)
     {
-        /* check for not NULL */
-        store->buf = (char *) malloc(sug_size);
-        store->size = sug_size;
-        store->len = 0;
+        suvbf->siridb = siridb;
+        suvbf->len = 0;
+        suvbf->size = 0;
+        suvbf->buf = NULL;
     }
-    buf->base = store->buf + store->len;
-    buf->len = store->size - store->len;
+    return suvbf;
+}
+
+void suv_buf_destroy(suv_buf_t * suvbf)
+{
+    free(suvbf->buf);
+    free(suvbf);
+}
+
+void alloc_buffer(uv_handle_t * handle, size_t sug_sz, uv_buf_t * buf)
+{
+    suv_buf_t * suvbf = (suv_buf_t *) handle->data;
+    printf("Alloc buffer...\n");
+    if (suvbf->len == 0 && suvbf->size != sug_sz)
+    {
+        free(suvbf->buf);
+        suvbf->buf = (char *) malloc(sug_sz);
+        suvbf->size = sug_sz;
+        suvbf->len = 0;
+    }
+
+    buf->base = suvbf->buf + suvbf->len;
+    buf->len = suvbf->size - suvbf->len;
 }
 
 void on_data(uv_stream_t * client, ssize_t nread, const uv_buf_t * buf)
 {
-    store_t * store = (store_t *) client->data;
+    suv_buf_t * suvbf = (suv_buf_t *) client->data;
+    siridb_pkg_t * pkg;
+    size_t total_sz;
 
     if (nread < 0)
     {
         if (nread != UV_EOF)
         {
             printf("read error: %s\n", uv_err_name(nread));
-            /* error handling */
         }
+
+        /* cleanup */
+        siridb_suvbuf_destroy(suvbf);
         uv_close((uv_handle_t *) client, NULL);
         return;
     }
 
-    store->len += nread;
+    suvbf->len += nread;
 
-    if (store->len > )
+    if (suvbf->len < sizeof(siridb_pkg_t))
+    {
+        return;
+    }
 
+    printf("Got data...\n");
+
+    pkg = (siridb_pkg_t *) suvbf->buf;
+    if (!siridb_pkg_check_bit(pkg))
+    {
+        /* handle invalid pkg */
+    }
+
+    total_sz = sizeof(siridb_pkg_t) + pkg->len;
+
+    if (suvbf->len < total_sz)
+    {
+        if (suvbf->size < total_sz)
+        {
+            char * tmp = realloc(suvbf->buf, total_sz);
+            /* handle tmp == NULL */
+            suvbf->buf = tmp;
+            suvbf->size = total_sz;
+        }
+        return;
+    }
+
+    siridb_on_pkg(suvbf->siridb, pkg);
+
+    suvbf->len -= total_sz;
+
+    if (suvbf->len > 0)
+    {
+        /* move data and call on_data() function again */
+        memmove(suvbf->buf, suvbf->buf + total_sz, suvbf->len);
+        on_data(client, 0, buf);
+    }
 }
 
-int main(void)
+int _main(void)
 {
     uv_tcp_t tcp;
     struct sockaddr_in addr;
@@ -305,12 +379,15 @@ int main(void)
     uv_ip4_addr(SERVER, PORT, &addr);
 
     siridb_t * siridb = siridb_create();
-    /* check for not NULL */
+    /* handle siridb == NULL */
+
+    suv_buf_t * suvbf = suv_buf_create(siridb);
+    /* handle suvbf == NULL */
 
     uv_connect_t * uvreq = (uv_connect_t *) malloc(sizeof(uv_connect_t));
-    /* check for not NULL */
+    /* handle uvreq == NULL */
 
-    uvreq->data = (void *) siridb;
+    tcp.data = (void *) suvbf;
 
     uv_tcp_init(loop, &tcp);
     uv_tcp_connect(uvreq, &tcp, (struct sockaddr *) &addr, connect_cb);
@@ -366,7 +443,7 @@ int main(void)
     uv_run(loop, UV_RUN_DEFAULT);
     close_handlers();
 
-    int r = uv_loop_close(loop);
+    uv_loop_close(loop);
     free(loop);
 
 // //    packer = qp_packer_create(QP_SUGGESTED_SIZE);

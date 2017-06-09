@@ -1,26 +1,29 @@
 src/errmap.o: ../src/errmap.c .././include/errmap.h .././include/siridb.h \
- .././include/thread.h .././include/imap.h .././include/pkg.h \
- .././include/resp.h .././include/series.h .././include/point.h \
- .././include/protomap.h .././include/handle.h .././include/conn.h
+ .././include/queue.h .././include/pkg.h .././include/req.h \
+ .././include/siridb.h .././include/errmap.h .././include/protomap.h \
+ .././include/series.h .././include/point.h .././include/resp.h \
+ .././include/packer.h
 
 .././include/errmap.h:
 
 .././include/siridb.h:
 
-.././include/thread.h:
-
-.././include/imap.h:
+.././include/queue.h:
 
 .././include/pkg.h:
 
-.././include/resp.h:
+.././include/req.h:
+
+.././include/siridb.h:
+
+.././include/errmap.h:
+
+.././include/protomap.h:
 
 .././include/series.h:
 
 .././include/point.h:
 
-.././include/protomap.h:
+.././include/resp.h:
 
-.././include/handle.h:
-
-.././include/conn.h:
+.././include/packer.h:

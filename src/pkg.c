@@ -5,7 +5,7 @@
  *      Author: Jeroen van der Heijden <jeroen@transceptor.technology>
  */
 
-#include <pkg.h>
+#include <siridb.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -60,9 +60,7 @@ siridb_pkg_t * siridb_pkg_auth(
     return siridb_packer_2pkg(packer, pid, CprotoReqAuth);
 }
 
-siridb_pkg_t * siridb_pkg_query(
-    uint16_t pid,
-    const char * query)
+siridb_pkg_t * siridb_pkg_query(uint16_t pid, const char * query)
 {
     siridb_packer_t * packer = siridb_packer_create(512);
     if (packer == NULL)
