@@ -1,36 +1,257 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 #include <uv.h>
 #include <qpack.h>
-#include <siridb/siridb.h>
+#include <libsiridb/siridb.h>
+#include "suv.h"
 
+uv_loop_t loop;
+uv_tcp_t tcp;
 
+const char * SERVER = "127.0.0.1";
+const int PORT = 9000;
+const char * USER = "iris";
+const char * PASSWD = "siri";
+const char * DBNAME = "dbtest";
+const char * QUERY = "timeit select * from /.*/";
 
+static void auth_cb(siridb_req_t * req);
+static void query_cb(siridb_req_t * req);
+static void send_example_query(siridb_t * siridb, const char * query);
+static void print_timeit(siridb_timeit_t * timeit);
+static void print_select(siridb_select_t * select);
+static void print_list(siridb_list_t * list);
+static void print_count(uint64_t count);
+static void print_calc(uint64_t calc);
+static void print_show(siridb_show_t * show);
+static void print_msg(const char * msg);
+static void print_val(qp_res_t * val);
 
 int main(void)
 {
-    uv_tcp_t tcp;
-    uv_loop_t loop;
-    uv_loop_init(loop);
+    struct sockaddr_in addr;
+    char * query = strdup(QUERY);
+
+    uv_loop_init(&loop);
 
     uv_ip4_addr(SERVER, PORT, &addr);
 
     siridb_t * siridb = siridb_create();
     /* handle siridb == NULL */
 
-    suv_buf_t * suvbf = suv_buf_create(siridb);
-    /* handle suvbf == NULL */
+    suv_buf_t * buf = suv_buf_create(siridb);
+    /* handle buf == NULL */
 
-    uv_connect_t * uvreq = (uv_connect_t *) malloc(sizeof(uv_connect_t));
-    /* handle uvreq == NULL */
+    siridb_req_t * req = siridb_req_create(siridb, auth_cb, NULL);
+    /* handle req == NULL */
 
-    tcp.data = (void *) suvbf;
+    suv_auth_t * auth = suv_auth_create(req, USER, PASSWD, DBNAME);
+    /* handle auth == NULL */
 
-    uv_tcp_init(loop, &tcp);
-    uv_tcp_connect(uvreq, &tcp, (struct sockaddr *) &addr, connect_cb);
+    auth->data = (void *) query;
+    req->data = (void *) auth;
 
-    uv_run(loop, UV_RUN_DEFAULT);
-    close_handlers();
+    /* here we bind a query string to auth just as an example of how to parse
+     * some custom object to the on_auth callback. */
+    uv_tcp_init(&loop, &tcp);
 
-    uv_loop_close(loop);
+    /* warn: this overwrites tcp->data so do not use the property yourself */
+    suv_connect(buf, auth, &tcp, (struct sockaddr *) &addr);
+
+    uv_run(&loop, UV_RUN_DEFAULT);
+
+    uv_loop_close(&loop);
+    suv_buf_destroy(buf);
+    siridb_destroy(siridb);
+
     return 0;
+}
+
+static void auth_cb(siridb_req_t * req)
+{
+    /* handle req == NULL */
+    suv_auth_t * auth = (suv_auth_t *) req->data;
+    char * query = (char *) auth->data;
+    if (req->status)
+    {
+        printf("authentication failed: %s\n", siridb_strerror(req->status));
+    }
+    else
+    {
+        send_example_query(req->siridb, query);
+    }
+    /* free query */
+    free(query);
+
+    /* destroy suv_auth_t */
+    suv_auth_destroy(auth);
+
+    /* destroy siridb request */
+    siridb_req_destroy(req);
+}
+
+static void query_cb(siridb_req_t * req)
+{
+    if (req->status != 0)
+    {
+        printf("error handling request: %s", siridb_strerror(req->status));
+    }
+    else
+    {
+        siridb_resp_t * resp = siridb_resp_create(req, NULL);
+        /* handle resp == NULL or us rc code for details */
+
+        print_timeit(resp->timeit);
+
+        switch (resp->tp)
+        {
+        case SIRIDB_RESP_TP_SELECT:
+            print_select(resp->via.select); break;
+        case SIRIDB_RESP_TP_LIST:
+            print_list(resp->via.list); break;
+        case SIRIDB_RESP_TP_COUNT:
+            print_count(resp->via.count); break;
+        case SIRIDB_RESP_TP_CALC:
+            print_calc(resp->via.calc); break;
+        case SIRIDB_RESP_TP_SHOW:
+            print_show(resp->via.show); break;
+        case SIRIDB_RESP_TP_SUCCESS:
+            print_msg(resp->via.success); break;
+        case SIRIDB_RESP_TP_SUCCESS_MSG:
+            print_msg(resp->via.success_msg); break;
+        case SIRIDB_RESP_TP_ERROR:
+            print_msg(resp->via.error); break;
+        case SIRIDB_RESP_TP_ERROR_MSG:
+            print_msg(resp->via.error_msg); break;
+        default: assert(0);
+        }
+        siridb_resp_destroy(resp);
+    }
+
+    /* destroy suv_query_t */
+    suv_query_destroy((suv_query_t *) req->data);
+
+    /* destroy siridb request */
+    siridb_req_destroy(req);
+
+    /* here we quit the example by closing the handle */
+    if (!uv_is_closing((uv_handle_t *) &tcp))
+    {
+        uv_close((uv_handle_t *) &tcp, NULL);
+    }
+}
+
+static void send_example_query(siridb_t * siridb, const char * query)
+{
+    siridb_req_t * req = siridb_req_create(siridb, query_cb, NULL);
+    /* handle qreq == NULL */
+
+    suv_query_t * suv_query = suv_query_create(req, query);
+    /* handle suvq == NULL */
+
+    /* bind query to qreq->data */
+    req->data = (suv_query_t *) suv_query;
+
+    suv_query_run(suv_query);
+    /* check query_cb for errors */
+}
+
+static void print_timeit(siridb_timeit_t * timeit)
+{
+    if (timeit != NULL)
+    {
+        printf("Query time: %f seconds\n", timeit->perfs[timeit->n - 1].time);
+        for (size_t i = 0; i < timeit->n; i++)
+        {
+            printf(
+                "    server: %s time: %f\n",
+                timeit->perfs[i].server,
+                timeit->perfs[i].time);
+        }
+        printf("\n");
+    }
+}
+
+static void print_select(siridb_select_t * select)
+{
+    printf("Select response for %lu series:\n", select->n);
+    for (size_t m = 0; m < select->n; m++)
+    {
+        siridb_series_t * series = select->series[m];
+
+        printf("    series: '%s'\n", series->name);
+        for (size_t i = 0; i < series->n; i++)
+        {
+            printf("        timestamp: %lu value: ", series->points[i].ts);
+            switch (series->tp)
+            {
+            case SIRIDB_SERIES_TP_INT64:
+                printf("%ld\n", series->points[i].via.int64); break;
+            case SIRIDB_SERIES_TP_REAL:
+                printf("%f\n", series->points[i].via.real); break;
+            case SIRIDB_SERIES_TP_STR:
+                printf("%s\n", series->points[i].via.str); break;
+            }
+        }
+    }
+}
+
+static void print_list(siridb_list_t * list)
+{
+    printf(
+        "List response with %lu columns and %lu rows:\n",
+        list->headers->via.array->n,
+        list->data->via.array->n);
+    for (size_t r = 0; r < list->data->via.array->n; r++)
+    {
+        qp_array_t * row = list->data->via.array->values[r].via.array;
+        for (size_t c = 0; c < row->n; c++)
+        {
+            if (c) printf(", ");
+            print_val(row->values + c);
+        }
+        printf("\n");
+    }
+}
+
+static void print_count(uint64_t count)
+{
+    printf("Count response: %lu\n", count);
+}
+
+static void print_calc(uint64_t calc)
+{
+    printf("Calc response: %lu\n", calc);
+}
+
+static void print_show(siridb_show_t * show)
+{
+    printf("Show response with %lu items\n", show->n);
+    for (size_t i = 0; i < show->n; i++)
+    {
+        printf("    %s: ", show->items[i].key);
+        print_val(show->items[i].value);
+        printf("\n");
+    }
+}
+
+static void print_msg(const char * msg)
+{
+    printf("%s\n", msg);
+}
+
+static void print_val(qp_res_t * val)
+{
+    switch (val->tp)
+    {
+    case QP_RES_MAP:    printf("{ ... }");              break;
+    case QP_RES_ARRAY:  printf("[ ... ]");              break;
+    case QP_RES_INT64:  printf("%ld", val->via.int64);  break;
+    case QP_RES_REAL:   printf("%f", val->via.real);    break;
+    case QP_RES_STR:    printf("%s", val->via.str);     break;
+    case QP_RES_BOOL:   printf("%d", val->via.bool);    break;
+    case QP_RES_NULL:   printf("null");                 break;
+    }
 }

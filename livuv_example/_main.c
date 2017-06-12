@@ -15,7 +15,6 @@
 #include <resp.h>
 
 
-
 int results = 0;
 uv_loop_t * loop;
 
@@ -132,114 +131,6 @@ static void on_data2(siridb_req_t * req)
     results++;
 
 }
-
-static void walk_close_handlers(uv_handle_t * handle, void * arg)
-{
-
-    if (uv_is_closing(handle))
-    {
-        return;
-    }
-
-    switch (handle->type)
-    {
-    case UV_WORK:
-        printf("WORK!!\n");
-        break;
-
-    case UV_SIGNAL:
-        uv_close(handle, NULL);
-        break;
-
-    case UV_TCP:
-        printf("TCP!!\n");
-        break;
-
-    case UV_TIMER:
-        printf("TIMER!!\n");
-        break;
-
-    case UV_ASYNC:
-        printf("ASYNC!!\n");
-        break;
-
-    case UV_IDLE:
-        uv_close(handle, NULL);
-        break;
-
-    default:
-        printf("HANDLE TPYE: %d\n", handle->type);
-        break;
-    }
-}
-
-static void close_handlers(void)
-{
-    /* close open handlers */
-    uv_walk(loop, walk_close_handlers, NULL);
-
-    /* run the loop once more so call-backs on uv_close() can run */
-    uv_run(loop, UV_RUN_DEFAULT);
-}
-
-static void auth_cb(siridb_req_t * req)
-{
-    if (!req->status)
-}
-
-const char * SERVER = "127.0.0.1";
-const int PORT = 9000;
-const char * USER = "iris";
-const char * PASSWD = "siri";
-const char * DBNAME = "dbtest";
-const int SUGGESTED_BUF_SIZE = 65536;
-
-
-static void connect_cb(uv_connect_t * uvreq, int status)
-{
-    if (status != 0)
-    {
-        /* error handling */
-        printf("cannot create connection: %s\n",  uv_strerror(status));
-    }
-    else
-    {
-        uv_read_start(uvreq->handle, suv_alloc_buffer, suv_on_data);
-
-        suv_buf_t * suvbf = (suv_buf_t *) uvreq->handle->data;
-
-        siridb_req_t * req = siridb_req_create(suvbf->siridb, auth_cb, NULL);
-        /* TODO: handle req == NULL or use rc code */
-
-        siridb_pkg_t * pkg = siridb_pkg_auth(req->pid, USER, PASSWD, DBNAME);
-        /* TODO: handle authreq == NULL */
-
-        printf("Here.3..%p\n", pkg);
-
-        uv_write_t * authreq = (uv_write_t *) malloc(sizeof(uv_write_t));
-        /* TODO: handle authreq == NULL */
-
-        printf("Here.4..%p\n", authreq);
-
-        /* bind pkg to req->data and req to authreq->data so we can free
-         * pkg when write is done or call callback functoin on errors.
-         */
-        req->data = (void *) pkg;
-        authreq->data = (void *) req;
-
-        uv_buf_t buf = uv_buf_init(
-                (char *) pkg,
-                sizeof(siridb_pkg_t) + pkg->len);
-
-        printf("Here.5..%p\n", authreq);
-
-        uv_write(authreq, (uv_stream_t *) uvreq->handle, &buf, 1, write_cb);
-    }
-    free(uvreq);
-}
-
-
-
 
 
 int _main(void)
