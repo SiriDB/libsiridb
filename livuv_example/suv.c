@@ -99,6 +99,32 @@ void suv_connect_destroy(suv_connect_t * connect)
 }
 
 /*
+ * Use this function to connect to SiriDB. Always use the callback defined by
+ * the request object parsed to suv_connect_create() for errors.
+ */
+void suv_connect(
+    suv_connect_t * connect,
+    suv_buf_t * buf,
+    uv_tcp_t * tcp,
+    struct sockaddr * addr)
+{
+    assert (connect->_req->data == connect);  /* bind connect to req->data */
+
+    uv_connect_t * uvreq = (uv_connect_t *) malloc(sizeof(uv_connect_t));
+    if (uvreq == NULL)
+    {
+        connect->_req->status = ERR_MEM_ALLOC;
+        connect->_req->cb(connect->_req);
+    }
+    else
+    {
+        tcp->data = (void *) buf;
+        uvreq->data = (void *) connect->_req;
+        uv_tcp_connect(uvreq, tcp, addr, suv__connect_cb);
+    }
+}
+
+/*
  * Create and return a query object or NULL in case of an allocation error.
  */
 suv_query_t * suv_query_create(siridb_req_t * req, const char * query)
@@ -152,32 +178,6 @@ void suv_query_run(suv_query_t * suvq)
             sizeof(siridb_pkg_t) + suvq->pkg->len);
 
         uv_write(uvreq, stream, &buf, 1, suv__write_cb);
-    }
-}
-
-/*
- * Use this function to connect to SiriDB. Always use the callback defined by
- * the request object parsed to suv_connect_create() for errors.
- */
-void suv_connect(
-    suv_connect_t * connect,
-    suv_buf_t * buf,
-    uv_tcp_t * tcp,
-    struct sockaddr * addr)
-{
-    assert (connect->_req->data == connect);  /* bind connect to req->data */
-
-    uv_connect_t * uvreq = (uv_connect_t *) malloc(sizeof(uv_connect_t));
-    if (uvreq == NULL)
-    {
-        connect->_req->status = ERR_MEM_ALLOC;
-        connect->_req->cb(connect->_req);
-    }
-    else
-    {
-        tcp->data = (void *) buf;
-        uvreq->data = (void *) connect->_req;
-        uv_tcp_connect(uvreq, tcp, addr, suv__connect_cb);
     }
 }
 
