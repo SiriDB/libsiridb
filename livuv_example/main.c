@@ -1,3 +1,14 @@
+/*
+ * main.c
+ *    SiriDB C-Connector example. Feel free to use/edit suv.c and suv.h in case
+ *    you want to connect to SiriDB using libuv. This example is created so
+ *    that the main file contains only real exampe code and the suv.c and suv.h
+ *    file can be re-used for any libuv project.
+ *
+ *  Created on: Jun 09, 2017
+ *      Author: Jeroen van der Heijden <jeroen@transceptor.technology>
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,12 +21,13 @@
 uv_loop_t loop;
 uv_tcp_t tcp;
 
+/* Change this values to your needs */
 const char * SERVER = "127.0.0.1";
 const int PORT = 9000;
 const char * USER = "iris";
 const char * PASSWD = "siri";
 const char * DBNAME = "dbtest";
-const char * QUERY = "timeit select * from /.*/";
+const char * QUERY = "select * from /.*/";
 
 static void connect_cb(siridb_req_t * req);
 static void query_cb(siridb_req_t * req);
