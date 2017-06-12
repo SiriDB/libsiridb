@@ -12,11 +12,13 @@
 #include <libsiridb/siridb.h>
 #include <uv.h>
 
+/* type definitions */
 typedef struct suv_buf_s suv_buf_t;
 typedef struct suv_write_s suv_write_t;
 typedef struct suv_write_s suv_connect_t;
 typedef struct suv_write_s suv_query_t;
 
+/* public functions */
 suv_buf_t * suv_buf_create(siridb_t * siridb);
 void suv_buf_destroy(suv_buf_t * suvbf);
 
@@ -36,7 +38,7 @@ suv_query_t * suv_query_create(siridb_req_t * req, const char * query);
 void suv_query_destroy(suv_query_t * suvq);
 void suv_query_run(suv_query_t * suvq);
 
-
+/* struct definitions */
 struct suv_buf_s
 {
     char * buf;
@@ -48,7 +50,7 @@ struct suv_buf_s
 struct suv_write_s
 {
     void * data;            /* public */
-    siridb_pkg_t * pkg;     /* send packge */
+    siridb_pkg_t * pkg;     /* packge to send */
     siridb_req_t * _req;    /* will not be cleared */
 };
 
