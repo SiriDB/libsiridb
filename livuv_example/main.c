@@ -17,7 +17,7 @@ const char * PASSWD = "siri";
 const char * DBNAME = "dbtest";
 const char * QUERY = "timeit select * from /.*/";
 
-static void auth_cb(siridb_req_t * req);
+static void connect_cb(siridb_req_t * req);
 static void query_cb(siridb_req_t * req);
 static void send_example_query(siridb_t * siridb, const char * query);
 static void print_timeit(siridb_timeit_t * timeit);
@@ -44,49 +44,54 @@ int main(void)
     suv_buf_t * buf = suv_buf_create(siridb);
     /* handle buf == NULL */
 
-    siridb_req_t * req = siridb_req_create(siridb, auth_cb, NULL);
+    siridb_req_t * req = siridb_req_create(siridb, connect_cb, NULL);
     /* handle req == NULL */
 
-    suv_auth_t * auth = suv_auth_create(req, USER, PASSWD, DBNAME);
-    /* handle auth == NULL */
+    suv_connect_t * connect = suv_connect_create(req, USER, PASSWD, DBNAME);
+    /* handle connect == NULL */
 
-    auth->data = (void *) query;
-    req->data = (void *) auth;
+    /* for the example we bind a query string but this could be anything */
+    connect->data = (void *) query;
+    req->data = (void *) connect;
 
-    /* here we bind a query string to auth just as an example of how to parse
-     * some custom object to the on_auth callback. */
     uv_tcp_init(&loop, &tcp);
 
     /* warn: this overwrites tcp->data so do not use the property yourself */
-    suv_connect(buf, auth, &tcp, (struct sockaddr *) &addr);
+    suv_connect(connect, buf, &tcp, (struct sockaddr *) &addr);
 
     uv_run(&loop, UV_RUN_DEFAULT);
-
     uv_loop_close(&loop);
+
+    /* cleanup buffer */
     suv_buf_destroy(buf);
+
+    /* cleanup siridb */
     siridb_destroy(siridb);
 
     return 0;
 }
 
-static void auth_cb(siridb_req_t * req)
+static void connect_cb(siridb_req_t * req)
 {
     /* handle req == NULL */
-    suv_auth_t * auth = (suv_auth_t *) req->data;
-    char * query = (char *) auth->data;
+    suv_connect_t * connect = (suv_connect_t *) req->data;
+
+    char * query = (char *) connect->data;
     if (req->status)
     {
-        printf("authentication failed: %s\n", siridb_strerror(req->status));
+        printf("connect failed: %s\n", siridb_strerror(req->status));
     }
     else
     {
+        /* connect and authentication was succesful, send query */
         send_example_query(req->siridb, query);
     }
-    /* free query */
+
+    /* free query string */
     free(query);
 
-    /* destroy suv_auth_t */
-    suv_auth_destroy(auth);
+    /* destroy suv_connect_t */
+    suv_connect_destroy(connect);
 
     /* destroy siridb request */
     siridb_req_destroy(req);

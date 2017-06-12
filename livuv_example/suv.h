@@ -14,26 +14,26 @@
 
 typedef struct suv_buf_s suv_buf_t;
 typedef struct suv_write_s suv_write_t;
-typedef struct suv_write_s suv_auth_t;
+typedef struct suv_write_s suv_connect_t;
 typedef struct suv_write_s suv_query_t;
 
 suv_buf_t * suv_buf_create(siridb_t * siridb);
 void suv_buf_destroy(suv_buf_t * suvbf);
 
-suv_auth_t * suv_auth_create(
+suv_connect_t * suv_connect_create(
     siridb_req_t * req,
     const char * username,
     const char * password,
     const char * dbname);
-void suv_auth_destroy(suv_auth_t * auth);
+void suv_connect_destroy(suv_connect_t * connect);
 
 suv_query_t * suv_query_create(siridb_req_t * req, const char * query);
 void suv_query_destroy(suv_query_t * suvq);
 void suv_query_run(suv_query_t * suvq);
 
 void suv_connect(
+    suv_connect_t * connect,
     suv_buf_t * buf,
-    suv_auth_t * auth,
     uv_tcp_t * tcp,
     struct sockaddr * addr);
 

@@ -66,9 +66,9 @@ void suv_write_destroy(suv_write_t * swrite)
 }
 
 /*
- * Create and return an auth object or NULL in case of an allocation error.
+ * Create and return an connect object or NULL in case of an allocation error.
  */
-suv_auth_t * suv_auth_create(
+suv_connect_t * suv_connect_create(
     siridb_req_t * req,
     const char * username,
     const char * password,
@@ -76,26 +76,26 @@ suv_auth_t * suv_auth_create(
 {
     assert (req->data == NULL); /* req->data should be set to -this- */
 
-    suv_write_t * auth = suv_write_create();
-    if (auth != NULL)
+    suv_write_t * connect = suv_write_create();
+    if (connect != NULL)
     {
-        auth->pkg = siridb_pkg_auth(req->pid, username, password, dbname);
-        auth->_req = req;
-        if (auth->pkg == NULL)
+        connect->pkg = siridb_pkg_auth(req->pid, username, password, dbname);
+        connect->_req = req;
+        if (connect->pkg == NULL)
         {
-            suv_write_destroy(auth);
-            auth = NULL;
+            suv_write_destroy(connect);
+            connect = NULL;
         }
     }
-    return (suv_auth_t *) auth;
+    return (suv_connect_t *) connect;
 }
 
 /*
- * Destroy an auth object.
+ * Destroy an connect object.
  */
-void suv_auth_destroy(suv_auth_t * auth)
+void suv_connect_destroy(suv_connect_t * connect)
 {
-    suv_write_destroy((suv_write_t * ) auth);
+    suv_write_destroy((suv_write_t * ) connect);
 }
 
 /*
@@ -157,26 +157,26 @@ void suv_query_run(suv_query_t * suvq)
 
 /*
  * Use this function to connect to SiriDB. Always use the callback defined by
- * the request object parsed to suv_auth_create() for errors.
+ * the request object parsed to suv_connect_create() for errors.
  */
 void suv_connect(
+    suv_connect_t * connect,
     suv_buf_t * buf,
-    suv_auth_t * auth,
     uv_tcp_t * tcp,
     struct sockaddr * addr)
 {
-    assert (auth->_req->data == auth);  /* bind auth to req->data */
+    assert (connect->_req->data == connect);  /* bind connect to req->data */
 
     uv_connect_t * uvreq = (uv_connect_t *) malloc(sizeof(uv_connect_t));
     if (uvreq == NULL)
     {
-        auth->_req->status = ERR_MEM_ALLOC;
-        auth->_req->cb(auth->_req);
+        connect->_req->status = ERR_MEM_ALLOC;
+        connect->_req->cb(connect->_req);
     }
     else
     {
         tcp->data = (void *) buf;
-        uvreq->data = (void *) auth->_req;
+        uvreq->data = (void *) connect->_req;
         uv_tcp_connect(uvreq, tcp, addr, suv__connect_cb);
     }
 }
@@ -194,7 +194,7 @@ static void suv__connect_cb(uv_connect_t * uvreq, int status)
     else
     {
         suv_buf_t * suvbf = (suv_buf_t *) uvreq->handle->data;
-        suv_auth_t * auth = (suv_auth_t *) req->data;
+        suv_connect_t * connect = (suv_connect_t *) req->data;
 
         /* bind uv_stream_t * to siridb->data */
         suvbf->siridb->data = (void *) uvreq->handle;
@@ -209,8 +209,8 @@ static void suv__connect_cb(uv_connect_t * uvreq, int status)
         uvw->data = (void *) req;
 
         uv_buf_t buf = uv_buf_init(
-                (char *) auth->pkg,
-                sizeof(siridb_pkg_t) + auth->pkg->len);
+                (char *) connect->pkg,
+                sizeof(siridb_pkg_t) + connect->pkg->len);
 
         uv_read_start(uvreq->handle, suv__alloc_buf, suv__on_data);
         uv_write(uvw, uvreq->handle, &buf, 1, suv__write_cb);
