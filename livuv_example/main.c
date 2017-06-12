@@ -5,6 +5,10 @@
  *    that the main file contains only real exampe code and the suv.c and suv.h
  *    file can be re-used for any libuv project.
  *
+ *  WARNING:
+ *     Be carefull runing this example since it will query and insert data into
+ *     SiriDB!
+ *
  *  Created on: Jun 09, 2017
  *      Author: Jeroen van der Heijden <jeroen@transceptor.technology>
  */
