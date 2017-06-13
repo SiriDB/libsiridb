@@ -28,7 +28,8 @@ typedef void (*siridb_cb) (siridb_req_t * req);
 /* public functions */
 siridb_t * siridb_create(void);
 void siridb_destroy(siridb_t * siridb);
-void siridb_on_pkg(siridb_t * siridb, siridb_pkg_t * pkg);
+int siridb_on_pkg(siridb_t * siridb, siridb_pkg_t * pkg);
+size_t siridb_queue_len(siridb_t * siridb);
 
 /* struct definitions */
 struct siridb_s

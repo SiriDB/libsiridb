@@ -40,18 +40,24 @@ void siridb_destroy(siridb_t * siridb)
     free(siridb);
 }
 
-void siridb_on_pkg(siridb_t * siridb, siridb_pkg_t * pkg)
+int siridb_on_pkg(siridb_t * siridb, siridb_pkg_t * pkg)
 {
     siridb_req_t * req =
             (siridb_req_t *) queue_pop(siridb->queue, (uint64_t) pkg->pid);
 
     if (req == NULL)
     {
-        printf("error: req not found, most likely it was cancelled\n");
-        return;
+        return ERR_NOT_FOUND;
     }
 
     req->pkg = siridb_pkg_dup(pkg);
     req->status = (req->pkg == NULL) ? ERR_MEM_ALLOC : 0;
     req->cb(req);
+
+    return 0;
+}
+
+inline size_t siridb_queue_len(siridb_t * siridb)
+{
+    return siridb->queue->len;
 }

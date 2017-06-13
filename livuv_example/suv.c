@@ -295,6 +295,7 @@ static void suv__on_data(uv_stream_t * clnt, ssize_t n, const uv_buf_t * buf)
     suv_buf_t * suvbf = (suv_buf_t *) clnt->data;
     siridb_pkg_t * pkg;
     size_t total_sz;
+    int rc;
 
     if (n < 0)
     {
@@ -343,7 +344,10 @@ static void suv__on_data(uv_stream_t * clnt, ssize_t n, const uv_buf_t * buf)
         return;
     }
 
-    siridb_on_pkg(suvbf->siridb, pkg);
+    if ((rc = siridb_on_pkg(suvbf->siridb, pkg)))
+    {
+        printf("error: %s\n", siridb_strerror(rc));
+    }
 
     suvbf->len -= total_sz;
 

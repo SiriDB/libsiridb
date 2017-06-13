@@ -25,8 +25,9 @@ void siridb_req_cancel(siridb_req_t * req);
 struct siridb_req_s
 {
     void * data;                /* public */
-    uint16_t pid;
     int status;
+    uint16_t pid;
+    uint16_t _pad0; // dummy
     siridb_pkg_t * pkg;
     siridb_cb cb;
     siridb_t * siridb;

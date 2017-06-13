@@ -15,9 +15,9 @@
 #define ERR_PENDING         -5
 #define ERR_CANCELLED       -6
 #define ERR_INVALID_STAT    -7
-#define ERR_CORRUPT         -8
-#define ERR_DESTROYED       -9
-#define ERR_OVERWRITTEN     -10
+#define ERR_OVERWRITTEN     -8
+#define ERR_NOT_FOUND       -9
+#define ERR_CORRUPT         -10
 #define ERR_OCCUPIED        -11
 #define ERR_UNKNOWN         -100
 
