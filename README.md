@@ -27,7 +27,7 @@ a response is received or the request is cancelled.
 #### `void * siridb_t.data`
 Space for user-defined arbitrary data. siridblib does not use this field.
 
-### API ### {#siridb-api}
+### [API]{#siridb-api}
 #### `siridb_t * siridb_create(void)`
 Creates a new SiriDB Client instance. In case of an error NULL will be returned.
 
