@@ -19,7 +19,7 @@ typedef struct siridb_series_s siridb_series_t;
 siridb_series_t * siridb_series_create(
         siridb_series_tp tp,
         char * name,
-        size_t n);
+        size_t size);
 void siridb_series_destroy(siridb_series_t * series);
 
 /* private */
@@ -37,6 +37,7 @@ struct siridb_series_s
     siridb_series_tp tp;
     char * name;
     size_t n;
+    size_t size;
     siridb_point_t points[];
 };
 

@@ -17,6 +17,7 @@ typedef struct suv_buf_s suv_buf_t;
 typedef struct suv_write_s suv_write_t;
 typedef struct suv_write_s suv_connect_t;
 typedef struct suv_write_s suv_query_t;
+typedef struct suv_write_s suv_insert_t;
 
 /* public functions */
 suv_buf_t * suv_buf_create(siridb_t * siridb);
@@ -36,7 +37,14 @@ void suv_connect(
 
 suv_query_t * suv_query_create(siridb_req_t * req, const char * query);
 void suv_query_destroy(suv_query_t * suvq);
-void suv_query_run(suv_query_t * suvq);
+void suv_query(suv_query_t * suvq);
+
+suv_insert_t * suv_insert_create(
+    siridb_req_t * req,
+    siridb_series_t * series[],
+    size_t n);
+void suv_insert_destroy(suv_insert_t * insert);
+void suv_insert(suv_insert_t * insert);
 
 /* struct definitions */
 struct suv_buf_s

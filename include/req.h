@@ -9,7 +9,6 @@
 #define SIRIDB_REQ_H_
 
 #include <inttypes.h>
-#include "pkg.h"
 #include "siridb.h"
 
 /* type definitions */

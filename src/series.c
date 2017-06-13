@@ -54,6 +54,27 @@ siridb_series_t * siridb_series_create(
     return series;
 }
 
+int siridb_series_resize(siridb_series_t ** series, size_t n)
+{
+    siridb_series_t * tmp;
+
+    tmp = (siridb_series_t *) realloc(
+            *series,
+            sizeof(siridb_series_t) + n * sizeof(siridb_point_t));
+
+    if (tmp == NULL)
+    {
+        /* an error has occurred */
+        return ERR_MEM_ALLOC;
+    }
+
+    /* overwrite the original value with the new one */
+    tmp->n = n;
+    *series = tmp;
+
+    return 0;
+}
+
 void siridb_series_destroy(siridb_series_t * series)
 {
     if (series->tp == SIRIDB_SERIES_TP_STR)

@@ -10,6 +10,9 @@
 #include <string.h>
 #include <assert.h>
 
+static suv_write_t * suv_write_create(void);
+static void suv_write_destroy(suv_write_t * swrite);
+static void suv_write(suv_write_t * swrite);
 static void suv__alloc_buf(uv_handle_t * handle, size_t sugsz, uv_buf_t * buf);
 static void suv__on_data(uv_stream_t * clnt, ssize_t n, const uv_buf_t * buf);
 static void suv__write_cb(uv_write_t * uvreq, int status);
@@ -40,29 +43,6 @@ void suv_buf_destroy(suv_buf_t * suvbf)
 {
     free(suvbf->buf);
     free(suvbf);
-}
-
-/*
- * Create and return a write object or NULL in case of an allocation error.
- */
-suv_write_t * suv_write_create(void)
-{
-    suv_write_t * swrite = (suv_write_t *) malloc(sizeof(suv_write_t));
-    if (swrite != NULL)
-    {
-        swrite->data = NULL;
-        swrite->pkg = NULL;
-    }
-    return swrite;
-}
-
-/*
- * Destroy a write object.
- */
-void suv_write_destroy(suv_write_t * swrite)
-{
-    free(swrite->pkg);
-    free(swrite);
 }
 
 /*
@@ -157,29 +137,102 @@ void suv_query_destroy(suv_query_t * suvq)
  * This function actually runs a query. Always use the callback defined by
  * the request object parsed to suv_query_create() for errors.
  */
-void suv_query_run(suv_query_t * suvq)
+void suv_query(suv_query_t * suvq)
 {
-    assert (suvq->_req->data == suvq); /* bind suvq to req->data */
+    suv_write((suv_write_t *) suvq);
+}
+
+/*
+ * Create and return a insert object or NULL in case of an allocation error.
+ */
+suv_insert_t * suv_insert_create(
+    siridb_req_t * req,
+    siridb_series_t * series[],
+    size_t n)
+{
+    assert (req->data == NULL); /* req->data should be set to -this- */
+
+    suv_write_t * insert = suv_write_create();
+    if (insert != NULL)
+    {
+        insert->pkg = siridb_pkg_series(req->pid, series, n);
+        insert->_req = req;
+        if (insert->pkg == NULL)
+        {
+            suv_write_destroy(insert);
+            insert = NULL;
+        }
+    }
+    return (suv_insert_t *) insert;
+}
+
+/*
+ * Destroy a insert object.
+ */
+void suv_insert_destroy(suv_insert_t * insert)
+{
+    suv_write_destroy((suv_write_t * ) insert);
+}
+
+/*
+ * This function actually send the insert. Always use the callback defined by
+ * the request object parsed to suv_insert_create() for errors.
+ */
+void suv_insert(suv_insert_t * insert)
+{
+    suv_write((suv_write_t *) insert);
+}
+
+/*
+ * Create and return a write object or NULL in case of an allocation error.
+ */
+static suv_write_t * suv_write_create(void)
+{
+    suv_write_t * swrite = (suv_write_t *) malloc(sizeof(suv_write_t));
+    if (swrite != NULL)
+    {
+        swrite->data = NULL;
+        swrite->pkg = NULL;
+    }
+    return swrite;
+}
+
+/*
+ * Destroy a write object.
+ */
+static void suv_write_destroy(suv_write_t * swrite)
+{
+    free(swrite->pkg);
+    free(swrite);
+}
+
+/*
+ * This function actually send the data.
+ */
+static void suv_write(suv_write_t * swrite)
+{
+    assert (swrite->_req->data == swrite); /* bind swrite to req->data */
 
     uv_write_t * uvreq = (uv_write_t *) malloc(sizeof(uv_write_t));
-    uv_stream_t * stream = (uv_stream_t *) suvq->_req->siridb->data;
+    uv_stream_t * stream = (uv_stream_t *) swrite->_req->siridb->data;
 
     if (uvreq == NULL)
     {
-        suvq->_req->status = ERR_MEM_ALLOC;
-        suvq->_req->cb(suvq->_req);
+        swrite->_req->status = ERR_MEM_ALLOC;
+        swrite->_req->cb(swrite->_req);
     }
     else
     {
-        uvreq->data = (void *) suvq->_req;
+        uvreq->data = (void *) swrite->_req;
 
         uv_buf_t buf = uv_buf_init(
-            (char *) suvq->pkg,
-            sizeof(siridb_pkg_t) + suvq->pkg->len);
+            (char *) swrite->pkg,
+            sizeof(siridb_pkg_t) + swrite->pkg->len);
 
         uv_write(uvreq, stream, &buf, 1, suv__write_cb);
     }
 }
+
 
 static void suv__connect_cb(uv_connect_t * uvreq, int status)
 {
