@@ -54,6 +54,20 @@ siridb_series_t * siridb_series_create(
     return series;
 }
 
+void siridb_series_destroy(siridb_series_t * series)
+{
+    if (series->tp == SIRIDB_SERIES_TP_STR)
+    {
+        size_t i;
+        for (i = 0; i < series->n; i++)
+        {
+            free(series->points[i].via.str);
+        }
+    }
+    free(series->name);
+    free(series);
+}
+
 int siridb_series_resize(siridb_series_t ** series, size_t n)
 {
     siridb_series_t * tmp;
@@ -73,20 +87,6 @@ int siridb_series_resize(siridb_series_t ** series, size_t n)
     *series = tmp;
 
     return 0;
-}
-
-void siridb_series_destroy(siridb_series_t * series)
-{
-    if (series->tp == SIRIDB_SERIES_TP_STR)
-    {
-        size_t i;
-        for (i = 0; i < series->n; i++)
-        {
-            free(series->points[i].via.str);
-        }
-    }
-    free(series->name);
-    free(series);
 }
 
 siridb_series_tp siridb__series_get_tp(qp_array_t * points)

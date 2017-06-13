@@ -173,18 +173,13 @@ static void insert_cb(siridb_req_t * req)
 
 static void insert_example(siridb_t * siridb)
 {
-    siridb_series_t * series[2];
+    siridb_series_t * series[2]; /* in this example we insert 2 series */
     siridb_point_t * point;
 
     series[0] = siridb_series_create(
         SIRIDB_SERIES_TP_INT64,         /* type integer */
         "c-conn-int64-test-series",     /* some name for the series */
         10);                            /* number of points */
-
-    series[1] = siridb_series_create(
-        SIRIDB_SERIES_TP_REAL,          /* type float */
-        "c-conn-real-test-series",      /* some name for the series */
-        5);                             /* number of points */
 
     for (size_t i = 0; i < series[0]->n; i++)
     {
@@ -194,6 +189,11 @@ static void insert_example(siridb_t * siridb)
         /* set a value, just the values 0 to 9 in this example */
         point->via.int64 = (int64_t) i;
     }
+
+    series[1] = siridb_series_create(
+        SIRIDB_SERIES_TP_REAL,          /* type float */
+        "c-conn-real-test-series",      /* some name for the series */
+        5);                             /* number of points */
 
     for (size_t i = 0; i < series[1]->n; i++)
     {
@@ -210,7 +210,7 @@ static void insert_example(siridb_t * siridb)
     suv_insert_t * suvinsert = suv_insert_create(req, series, 2);
     /* handle suvinsert == NULL */
 
-    /* destroy the series, we don't need them anymore */
+    /* cleanup the series, we don't need them anymore */
     siridb_series_destroy(series[0]);
     siridb_series_destroy(series[1]);
 
