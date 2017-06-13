@@ -14,8 +14,8 @@ response to the request is the resposibility of this library.
 
 ---------------------------------------
   * [siridb_t](#siridb-t)
-    * [members](#siridb-t-members)
-    * [api](#siridb-t-api)
+    * [members](#siridb-t-MEMBERS)
+    * [api](#siridb-t-API)
 
 ---------------------------------------
 
