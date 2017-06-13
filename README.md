@@ -14,8 +14,8 @@ response to the request is the resposibility of this library.
 
 ---------------------------------------
   * [siridb_t](#siridb_t)
-    * [members](#siridb_t-members)
-    * [api](#siridb_t-api)
+    * [members](#members-siridb_t)
+    * [api](#api-siridb_t)
 
 ---------------------------------------
 
@@ -23,11 +23,11 @@ response to the request is the resposibility of this library.
 SiriDB Client type. Pending request are stored in a queue on this object until
 a response is received or the request is cancelled.
 
-## siridb_t MEMBERS
+## MEMBERS (siridb_t)
 #### `void * siridb_t.data`
 Space for user-defined arbitrary data. siridblib does not use this field.
 
-## siridb_t API
+## API (siridb_t)
 ### `siridb_t * siridb_create(void)`
 Creates a new SiriDB Client instance. In case of an error NULL will be returned.
 
