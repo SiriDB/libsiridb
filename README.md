@@ -19,9 +19,7 @@ response to the request is the resposibility of this library.
 SiriDB Client type. Pending request are stored in a queue on this object until
 a response is received or the request is cancelled.
 
-```c
-void * siridb_t.data
-```
+#### `void * siridb\_t.data`
 Space for user-defined arbitrary data. siridblib does not use this field.
 
 #### siridb_t * siridb\_create(void)
