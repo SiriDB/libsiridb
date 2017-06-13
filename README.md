@@ -13,8 +13,8 @@ map the result to the request. Assigning a unique pid to a request and mapping a
 response to the request is the resposibility of this library.
 
 ---------------------------------------
-  * [siridb_t](#siridb-t)
-    * [members](#siridb-t-members)
+  * [siridb_t](#siridb_t)
+    * [members](#siridb_t-members)
     * [api](#siridb_t-api)
 
 ---------------------------------------
