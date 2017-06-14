@@ -282,7 +282,7 @@ static void print_timeit(siridb_timeit_t * timeit)
 
 static void print_select(siridb_select_t * select)
 {
-    printf("Select response for %lu series:\n", select->n);
+    printf("Select response for %" PRIu64 " series:\n", select->n);
     for (size_t m = 0; m < select->n; m++)
     {
         siridb_series_t * series = select->series[m];
@@ -290,7 +290,9 @@ static void print_select(siridb_select_t * select)
         printf("    series: '%s'\n", series->name);
         for (size_t i = 0; i < series->n; i++)
         {
-            printf("        timestamp: %lu value: ", series->points[i].ts);
+            printf(
+                "        timestamp: %" PRIu64 " value: ",
+                series->points[i].ts);
             switch (series->tp)
             {
             case SIRIDB_SERIES_TP_INT64:
@@ -307,7 +309,7 @@ static void print_select(siridb_select_t * select)
 static void print_list(siridb_list_t * list)
 {
     printf(
-        "List response with %lu columns and %lu rows:\n",
+        "List response with %zu columns and %zu rows:\n",
         list->headers->via.array->n,
         list->data->via.array->n);
     for (size_t r = 0; r < list->data->via.array->n; r++)
@@ -324,7 +326,7 @@ static void print_list(siridb_list_t * list)
 
 static void print_count(uint64_t count)
 {
-    printf("Count response: %lu\n", count);
+    printf("Count response: %" PRIu64 "\n", count);
 }
 
 static void print_calc(uint64_t calc)
@@ -334,7 +336,7 @@ static void print_calc(uint64_t calc)
 
 static void print_show(siridb_show_t * show)
 {
-    printf("Show response with %lu items\n", show->n);
+    printf("Show response with %zu items\n", show->n);
     for (size_t i = 0; i < show->n; i++)
     {
         printf("    %s: ", show->items[i].key);
