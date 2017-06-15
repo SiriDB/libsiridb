@@ -19,7 +19,7 @@ the resposibility of this library.
   * [Installation](#installation)
   * [API](#api)
     * [siridb_t](#siridb_t)
-  * [Example (libsiridb with libuv)](#example-\(libsiridb-with-libuv\))
+  * [Example (libuv implementation)](#example-libuv-implementation)
 ---------------------------------------
 
 ## Installation
@@ -67,7 +67,7 @@ returned.
 Returns the numbers of requests in the queue.
 
 
-## Example (libsiridb with libuv)
+## Example (libuv implementation)
 This project contains an example of how libsiridb can be used with libuv. The
 example is created as an extend to this api using [suv.h](libuv_example/suv.h)
 and [suv.c](libuv_example/suv.c) which is explained
