@@ -392,7 +392,7 @@ is `NULL`.
 - `size_t siridb_timeit_t.n`: Number of perfs. (readonly)
 - `siridb_perf_t siridb_timeit_t.perfs[]`: Array of `siridb_perf_t`. (readonly)
 
-Example using timeit info:
+Example using `siridb_timeit_t`:
 ```c
 printf("Query time: %f seconds\n", timeit->perfs[timeit->n - 1].time);
 for (size_t i = 0; i < timeit->n; i++) {
@@ -413,14 +413,56 @@ Perf is part of [timeit](#siridb_timeit_t) info.
 ### `siridb_select_t`
 Contains series with points. This is a response to a successful select query.
 
-SiriDB example select query:
+*Public members*
+- `size_t siridb_select_t.n`: Number of series.
+- `siridb_series_t * siridb_select_t.series[]`: Array of series of length `siridb_series_t.n`.
+
+Example select query:
 ```
-select * from 'my-series';
+select * from 'net-interface-in', 'net-interface-out'
 ```
+Example using `siridb_select_t`:
+```c
+for (size_t m = 0; m < select->n; m++) {
+    siridb_series_t * series = select->series[m];
+    printf("series name: '%s'\n", series->name);
+    for (size_t i = 0; i < series->n; i++) {
+        siridb_point_t * point = series->points[i];
+        printf("timestamp: %" PRIu64 " value: ", point.ts);
+        switch (series->tp) {
+        case SIRIDB_SERIES_TP_INT64: printf("%ld\n", point.via.int64); break;
+        case SIRIDB_SERIES_TP_REAL: printf("%f\n", point.via.real); break;
+        case SIRIDB_SERIES_TP_STR: printf("%s\n", point.via.str); break;
+        }
+    }
+}
+```
+### `siridb_list_t`
+List contains a table with information. This is a response to a succesfull list
+query.
 
 *Public members*
-- `size_t siridb_select_t.n`
-- `siridb_series_t * siridb_select_t.series[]`
+- `qp_res_t * siridb_list_t.headers`: Contains column names.
+- `qp_res_t * siridb_list_t.data`: Contains rows.
+
+Example list query:
+```
+list series name, length where length > 1000 limit 10
+```
+Example using `siridb_list_t`:
+```c
+printf("Got %zu columns and %zu rows:\n",
+    list->headers->via.array->n,
+    list->data->via.array->n);
+for (size_t r = 0; r < list->data->via.array->n; r++) {
+    qp_array_t * row = list->data->via.array->values[r].via.array;
+    for (size_t c = 0; c < row->n; c++) {
+        if (c) printf(", ");
+        qp_res_fprint(row->values + c, stdout);
+    }
+    printf("\n");
+}
+```
 
 ### Miscellaneous functions
 #### `const char * siridb_strerror(int err_code)`

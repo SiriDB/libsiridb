@@ -50,7 +50,6 @@ static void print_count(uint64_t count);
 static void print_calc(uint64_t calc);
 static void print_show(siridb_show_t * show);
 static void print_msg(const char * msg);
-static void print_val(qp_res_t * val);
 
 int main(void)
 {
@@ -322,7 +321,7 @@ static void print_list(siridb_list_t * list)
         for (size_t c = 0; c < row->n; c++)
         {
             if (c) printf(", ");
-            print_val(row->values + c);
+            qp_res_fprint(row->values + c, stdout);
         }
         printf("\n");
     }
@@ -344,7 +343,7 @@ static void print_show(siridb_show_t * show)
     for (size_t i = 0; i < show->n; i++)
     {
         printf("    %s: ", show->items[i].key);
-        print_val(show->items[i].value);
+        qp_res_fprint(show->items[i].value, stdout);
         printf("\n");
     }
 }
@@ -352,18 +351,4 @@ static void print_show(siridb_show_t * show)
 static void print_msg(const char * msg)
 {
     printf("%s\n", msg);
-}
-
-static void print_val(qp_res_t * val)
-{
-    switch (val->tp)
-    {
-    case QP_RES_MAP:    printf("{ ... }");              break;
-    case QP_RES_ARRAY:  printf("[ ... ]");              break;
-    case QP_RES_INT64:  printf("%ld", val->via.int64);  break;
-    case QP_RES_REAL:   printf("%f", val->via.real);    break;
-    case QP_RES_STR:    printf("%s", val->via.str);     break;
-    case QP_RES_BOOL:   printf("%d", val->via.bool);    break;
-    case QP_RES_NULL:   printf("null");                 break;
-    }
 }
