@@ -139,6 +139,41 @@ will remove the request from the queue (if exists), sets the request status to
 `ERR_CANCELLED` and calls the callback function. The callback function is
 responsable for destroying the request.
 
+### `siridb_pkg_t`
+SiriDB Package type. When communicating with SiriDB, both sending and receiving
+is done with packages.
+
+*Members (in order)*
+- `uint32_t siridb_pkg_t.len`: Length of `siridb_pkg_t.data[]`. (readonly)
+- `uint16_t siridb_pkg_t.pid`: Package identifiers. (readonly)
+- `uint8_t siridb_pkg_t.tp`: Package type. (readonly)
+  *Request types*
+  - `CprotoReqQuery`: Request query.
+  - `CprotoReqInsert`: Request insert.
+  - `CprotoReqAuth`: Request authentication.
+  - `CprotoReqPing`: Request ping.
+  - `CprotoReqAdmin`: Request service task.
+  *Successful response types*
+  - `CprotoResQuery`: Response to successful query.
+  - `CprotoResInsert`: Response to successful insert.
+  - `CprotoResAuthSuccess`: Response to successful authentication. (no data)
+  - `CprotoResAck`: Response ACK. (no data)
+  - `CprotoResInfo`: Do not use. (only used by siridb-server)
+  - `CprotoResFile`: Do not use. (only used by siridb-server)
+  - `CprotoAckAdmin`: Response on successful service task. (no data)
+  - `CprotoAckAdminData`: Response with data on successful service task.
+  *Error response types*
+  - `CprotoErrMsg`: Error with message.
+  - `CprotoErrQuery`: Returned when the query is invalid.
+  - `CprotoErrInsert`: Returned when the insert-data is invalid.
+  - `CprotoErrServer`: Request could not be handled by the server.
+  - `CprotoErrPool`: Request could not be handled because a required pool is unavailable.
+  - `CprotoErrUserAccess`: Database user has not enough privileges to handle request.
+  - `CprotoErr`: General error. (no data)
+- `uint8_t siridb_pkg_t.checkbit`: Checkbit. (readonly)
+- `unsigned char siridb_pkg_t.data[]`: Empty or content serialized using libqpack. (readonly)
+
+
 ### Miscellaneous functions
 #### `const char * siridb_strerror(int err_code)`
 Returns the error message for a given error code.
