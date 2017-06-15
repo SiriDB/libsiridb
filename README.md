@@ -2,7 +2,7 @@
 SiriDB Connector C is a library which can be used to communicate with SiriDB
 using the C program language. This library contains useful functions but does
 not handle the connection itself. When using [libuv](http://libuv.org/) we do
-have a complete [example](livuv_example/README.md) which can be used easily for
+have a complete [example](libuv_example/README.md) which can be used easily for
 any project.
 
 Siridb can handle multiple queries and/or inserts on a single connection
@@ -69,6 +69,6 @@ Returns the numbers of requests in the queue.
 
 ## Example libuv
 This project contains an example of how libsiridb can be used with libuv. The
-example is created as an extend to this api using [suv.h](example_libuv/suv.h)
-and [suv.c](example_libuv/suv.c) which is explained
-[here](livuv_example/README.md).
+example is created as an extend to this api using [suv.h](libuv_example/suv.h)
+and [suv.c](libuv_example/suv.c) which is explained
+[here](libuv_example/README.md).
