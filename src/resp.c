@@ -53,17 +53,13 @@ static const char * count_types[] = {
  * Returns 0 if successful or a negative value in case of an error.
  *
  */
-siridb_resp_t * siridb_resp_create(siridb_req_t * req, int * rc)
+siridb_resp_t * siridb_resp_create(siridb_pkg_t * pkg, int * rc)
 {
+    assert (pkg != NULL);
+
     int fallb;
     int * rcode = (rc == NULL) ? &fallb : rc;
     siridb_resp_t * resp;
-
-    if (req->status != 0)
-    {
-        *rcode = ERR_INVALID_STAT;
-        return NULL;
-    }
 
     resp = (siridb_resp_t *) malloc(sizeof(siridb_resp_t));
     if (resp == NULL)
@@ -75,24 +71,22 @@ siridb_resp_t * siridb_resp_create(siridb_req_t * req, int * rc)
     resp->tp = SIRIDB_RESP_TP_UNDEF;
     resp->timeit = NULL;
 
-    assert (req->pkg != NULL);
-
-    switch(req->pkg->tp)
+    switch(pkg->tp)
     {
     case CprotoResQuery:
-        *rcode = siridb_resp_query(resp, req->pkg);
+        *rcode = siridb_resp_query(resp, pkg);
         break;
     case CprotoResInfo:
     case CprotoAckAdminData:
-        *rcode = siridb_resp_data(resp, req->pkg);
+        *rcode = siridb_resp_data(resp, pkg);
         break;
     case CprotoResInsert:
-        *rcode = siridb_resp_success_msg(resp, req->pkg);
+        *rcode = siridb_resp_success_msg(resp, pkg);
         break;
     case CprotoResAuthSuccess:
     case CprotoResAck:
     case CprotoAckAdmin:
-        *rcode = siridb_resp_success(resp, req->pkg->tp);
+        *rcode = siridb_resp_success(resp, pkg->tp);
         break;
     case CprotoErrMsg:
     case CprotoErrUserAccess:
@@ -101,10 +95,10 @@ siridb_resp_t * siridb_resp_create(siridb_req_t * req, int * rc)
     case CprotoErrQuery:
     case CprotoErrInsert:
     case CprotoErrAdmin:
-        *rcode = siridb_resp_error_msg(resp, req->pkg);
+        *rcode = siridb_resp_error_msg(resp, pkg);
         break;
     default:
-        *rcode = siridb_resp_error(resp, req->pkg->tp);
+        *rcode = siridb_resp_error(resp, pkg->tp);
     }
 
     if (*rcode)

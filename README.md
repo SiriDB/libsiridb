@@ -22,6 +22,10 @@ the resposibility of this library.
     * [siridb_t](#siridb_t)
     * [siridb_req_t](#siridb_req_t)
     * [siridb_pkg_t](#siridb_pkg_t)
+    * [siridb_packer_t](#siridb_packer_t)
+    * [siridb_resp_t](#siridb_resp_t)
+    * [siridb_series_t](#siridb_series_t)
+    * [siridb_point_t](#siridb_point_t)
     * [Miscellaneous functions](#miscellaneous-functions)
 
 ---------------------------------------
@@ -224,6 +228,148 @@ Duplicate a pacakge. Returns `NULL` in case of a memory allocation error.
 Macro function for checking if a package has a valid checkbit. When a package
 header is received, this functions should be used to check if the package is
 valid. Returns 1 (TRUE) if the package is valid or 0 (FALSE) if not.
+
+### `siridb_packer_t`
+Alias for `qp_packer_t`. We use a own defined type since `siridb_packer_t`
+created with `siridb_packer_create()` reserve extra space at the beginning of
+size `sizeof(siridb_pkg_t)`. This extra space make a `siridb_packer_t` instance
+work with any `qp_packer_t` function except `qp_packer_print()`.
+
+#### `siridb_packer_t * siridb_packer_create(size_t alloc_size)`
+Like `qp_packer_create` except that the minimal `alloc_size` size is
+`sizeof(siridb_pkg_t)`.
+
+#### `void siridb_packer_destroy(siridb_packer_t * packer)`
+Cleanup `siridb_packer_t`.
+>Note: Do not use this function after calling `siridb_packer_2pkg()`.
+
+#### `siridb_pkg_t * siridb_packer_2pkg(siridb_packer_t * packer, uint16_t pid, uint8_t tp)`
+Creates and returns a new package from a `siridb_packer_t`.
+>Note: The packer will be destroyed and can not be used after calling this
+>function. No new memory will be allocated by this function because the
+>`siridb_pkg_t` is created from the `siridb_packer_t.buffer`.
+
+### `siridb_resp_t`
+SiriDB Response type. A response type is created from a `siridb_pkg_t` and
+unpacks the raw qpack data to a more easy-to-use data object.
+
+*Public members*
+- `siridb_resp_tp siridb_resp_t.tp`: Response object type.
+  - `SIRIDB_RESP_TP_UNDEF` *(value = 0, undefined response type)*
+  - `SIRIDB_RESP_TP_SELECT`
+  - `SIRIDB_RESP_TP_LIST`
+  - `SIRIDB_RESP_TP_SHOW`
+  - `SIRIDB_RESP_TP_COUNT`
+  - `SIRIDB_RESP_TP_CALC`
+  - `SIRIDB_RESP_TP_SUCCESS`
+  - `SIRIDB_RESP_TP_SUCCESS_MSG`
+  - `SIRIDB_RESP_TP_ERROR`
+  - `SIRIDB_RESP_TP_ERROR_MSG`
+  - `SIRIDB_RESP_TP_HELP`
+  - `SIRIDB_RESP_TP_MOTD` *(used only by siridb-server DEBUG-release)*
+  - `SIRIDB_RESP_TP_DATA` *(used only for admin/service task response)*
+- `siridb_resp_via_t siridb_resp_t.via`: Response data.
+  - `siridb_select_t * select`
+  - `siridb_list_t * list`
+  - `siridb_show_t * show`
+  - `uint64_t count`
+  - `uint64_t calc`
+  - `char * success`
+  - `char * success_msg`
+  - `char * error`
+  - `char * error_msg`
+  - `char * help`
+  - `char * motd`
+  - `qp_res_t * data`
+- `siridb_timeit_t * siridb_resp_t.timeit`: Optional timeit info or `NULL`.
+
+#### `siridb_resp_t * siridb_resp_create(siridb_pkg_t * pkg, int * rc)`
+Creates and returns a response. A `siridb_req_t` callback function should
+check for the request status and when this status is zero then the
+`siridb_req_t.pkg` property can be used to create a nice response object.
+In case of an error `NULL` is returned and an optional `rc` argument can be
+used to get more detailed information about the error.
+
+Example:
+```c
+void some_callback_func(siridb_req_t * req)
+{
+    if (req->status != 0) {
+        printf("error: %s", siridb_strerror(req->status));
+    } else {
+        int rc;
+        // we known for sure req->pkg is not NULL since req-status is 0
+        siridb_resp_t * resp = siridb_resp_create(req->pkg, &rc);
+        if (rc) {
+            printf("error creating response type : %s", siridb_strerror(rc));
+        } else {
+            // do something with the response
+
+            /* cleanup response */
+            siridb_resp_destroy(resp);
+        }
+    }
+
+    /* cleanup request */
+    siridb_req_destroy(req);
+}
+```
+
+### `siridb_series_t`
+SiriDB Series type. This type is used when a `siridb_resp_t` is created from
+a `select` query statement to SiriDB (see [siridb_select_t](#siridb_select_t).
+`siridb_series_t` can also be used to insert new data into SiriDB.
+
+*Public members*
+- `siridb_series_tp siridb_series_t.tp`: Series type.
+  - `SIRIDB_SERIES_TP_INT64`
+  - `SIRIDB_SERIES_TP_REAL`
+  - `SIRIDB_SERIES_TP_STR` *(not implemented in siridb-server at this moment)*
+- `char * siridb_series_t.name`: Name (identifier) for the series.
+- `size_t siridb_series_t.n`: Number of points.
+- `siridb_point_t siridb_series_t.points[]`: Array of `n` points.
+
+#### `siridb_series_t * siridb_series_create(siridb_series_tp tp, char * name, size_t size)`
+Creates and returns a pointer to a `siridb_series_t` instance. Argument `size`
+defines the number of points the series can hold. If required it can be resized
+using `siridb_series_resize()`.
+
+Example creating an integer series with some sample data:
+```c
+siridb_series_t * series = siridb_series_create(
+    SIRIDB_SERIES_TP_INT64,     /* type integer */
+    "just-an-example",          /* name for the series */
+    5);                         /* number of points */
+
+for (size_t i = 0; i < series->n; i++)
+{
+    point = series->points + i;
+    /* set time-stamps for the last n seconds */
+    point->ts = (uint64_t) time(NULL) - series->n + i;
+    point->via.int64 = (int64_t) i;
+}
+```
+
+#### `void siridb_series_destroy(siridb_series_t * series)`
+Cleanup `siridb_series_t`.
+
+#### `int siridb_series_resize(siridb_series_t ** series, size_t n)`
+Resize an existing series object to `n` number of points. Returns 0 if
+successful or `ERR_MEM_ALLOC` in case or a memory allocation error.
+
+### `siridb_point_t`
+SiriDB Point type. A point represents a time-stamp and value and is always part
+of a points array in a [siridb_series_t](#siridb_series_t) object.
+
+*Public members*
+- `uint64_t siridb_point_t.ts`: time-stamp
+- `siridb_point_via_t siridb_point_t.via`: value. (Type is defined by the series)
+  - `int64_t int64`
+  - `double real`
+  - `char * str`
+
+#### `void siridb_resp_destroy(siridb_resp_t * resp)`
+Cleanup `siridb_resp_t`.
 
 ### Miscellaneous functions
 #### `const char * siridb_strerror(int err_code)`

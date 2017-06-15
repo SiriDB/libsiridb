@@ -10,7 +10,7 @@
 
 #include <qpack.h>
 #include "series.h"
-#include "req.h"
+#include "pkg.h"
 
 /* response definitions */
 typedef enum siridb_resp_e siridb_resp_tp;
@@ -39,8 +39,8 @@ enum siridb_resp_e
     SIRIDB_RESP_TP_ERROR,
     SIRIDB_RESP_TP_ERROR_MSG,
     SIRIDB_RESP_TP_HELP,
-    SIRIDB_RESP_TP_DATA,
-    SIRIDB_RESP_TP_MOTD     /* only when SiriDB server is in debug mode */
+    SIRIDB_RESP_TP_MOTD,    /* only when SiriDB server is in debug mode */
+    SIRIDB_RESP_TP_DATA
 };
 
 /* unions */
@@ -48,19 +48,19 @@ union siridb_resp_u {
     siridb_select_t * select;
     siridb_list_t * list;
     siridb_show_t * show;
-    qp_res_t * data;
     uint64_t count;
     uint64_t calc;
     char * success;
-    char * error;
     char * success_msg;
+    char * error;
     char * error_msg;
     char * help;
     char * motd;  /* only when SiriDB server is in debug mode */
+    qp_res_t * data;
 };
 
 /* public functions */
-siridb_resp_t * siridb_resp_create(siridb_req_t * req, int * rc);
+siridb_resp_t * siridb_resp_create(siridb_pkg_t * pkg, int * rc);
 void siridb_resp_destroy(siridb_resp_t * resp);
 
 /* struct definitions */

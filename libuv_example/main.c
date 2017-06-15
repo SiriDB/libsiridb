@@ -126,7 +126,7 @@ static void query_cb(siridb_req_t * req)
     }
     else
     {
-        siridb_resp_t * resp = siridb_resp_create(req, NULL);
+        siridb_resp_t * resp = siridb_resp_create(req->pkg, NULL);
         /* handle resp == NULL or us rc code for details */
         print_resp(resp);
 
@@ -151,7 +151,7 @@ static void insert_cb(siridb_req_t * req)
     }
     else
     {
-        siridb_resp_t * resp = siridb_resp_create(req, NULL);
+        siridb_resp_t * resp = siridb_resp_create(req->pkg, NULL);
         /* handle resp == NULL or us rc code for details */
         print_resp(resp);
 
