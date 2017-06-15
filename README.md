@@ -233,10 +233,11 @@ header is received, this functions should be used to check if the package is
 valid. Returns 1 (TRUE) if the package is valid or 0 (FALSE) if not.
 
 ### `siridb_packer_t`
-Alias for `qp_packer_t`. We use a own defined type since `siridb_packer_t`
-created with `siridb_packer_create()` reserve extra space at the beginning of
-size `sizeof(siridb_pkg_t)`. This extra space make a `siridb_packer_t` instance
-work with any `qp_packer_t` function except `qp_packer_print()`.
+Alias for `qp_packer_t`. We use an own defined type since `siridb_packer_t`
+created with `siridb_packer_create()` reserves `sizeof(siridb_pkg_t)` extra
+space at the beginning of the buffer. Dispite of this extra space, a
+`siridb_packer_t` instance works with any `qp_packer_t` function except for
+the macro function `qp_packer_print()`.
 
 #### `siridb_packer_t * siridb_packer_create(size_t alloc_size)`
 Like `qp_packer_create` except that the minimal `alloc_size` size is
@@ -253,8 +254,8 @@ Creates and returns a new package from a `siridb_packer_t`.
 >`siridb_pkg_t` is created from the `siridb_packer_t.buffer`.
 
 ### `siridb_resp_t`
-SiriDB Response type. A response type is created from a `siridb_pkg_t` and
-unpacks the raw qpack data to a more easy-to-use data object.
+SiriDB Response type. A response type can be created from a `siridb_pkg_t` and
+is easier to use compared to the raw package.
 
 *Public members*
 - `siridb_resp_tp siridb_resp_t.tp`: Response object type.
