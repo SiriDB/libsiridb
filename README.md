@@ -1,8 +1,8 @@
 # SiriDB Connector C (libsiridb)
-SiriDB Connector C (libsiridb) is a library which can be used to communicate 
+SiriDB Connector C (libsiridb) is a library which can be used to communicate
 with SiriDB using the C program language. This library contains useful
-functions but does not handle the connection itself. When using 
-[libuv](http://libuv.org/) we do have a complete [example](libuv_example/README.md) 
+functions but does not handle the connection itself. When using
+[libuv](http://libuv.org/) we do have a complete [example](libuv_example/README.md)
 which can be used easily for any project.
 
 Siridb can handle multiple queries and/or inserts on a single connection
@@ -26,6 +26,9 @@ the resposibility of this library.
     * [siridb_resp_t](#siridb_resp_t)
     * [siridb_series_t](#siridb_series_t)
     * [siridb_point_t](#siridb_point_t)
+    * [siridb_timeit_t](#siridb_timeit_t)
+    * [siridb_perf_t](#siridb_perf_t)
+    * [siridb_select_t](#siridb_select_t)
     * [Miscellaneous functions](#miscellaneous-functions)
 
 ---------------------------------------
@@ -315,6 +318,9 @@ void some_callback_func(siridb_req_t * req)
 }
 ```
 
+#### `void siridb_resp_destroy(siridb_resp_t * resp)`
+Cleanup `siridb_resp_t`.
+
 ### `siridb_series_t`
 SiriDB Series type. This type is used when a `siridb_resp_t` is created from
 a `select` query statement to SiriDB (see [siridb_select_t](#siridb_select_t).
@@ -368,8 +374,53 @@ of a points array in a [siridb_series_t](#siridb_series_t) object.
   - `double real`
   - `char * str`
 
-#### `void siridb_resp_destroy(siridb_resp_t * resp)`
-Cleanup `siridb_resp_t`.
+### `siridb_timeit_t`
+Contains timeit info. Timeit info is available when a query to SiriDB is prefixed
+with the `timeit` keyword. In that case `siridb_timeit_t.perfs[]` contains an
+array of [siridb_perf_t](#siridb_perf_t).
+
+The last perf (`siridb_timeit_t.n - 1`) contains the server and time of the
+SiriDB server which has processed the query. Timing starts and ends on this
+server so the time is equal to the total time it took SiriDB to process the query.
+Timeit contains only perf data for servers which have actually worked on
+processing the query.
+
+In case no timeit info is available in the response then `siridb_resp_t.timeit`
+is `NULL`.
+
+*Public members*
+- `size_t siridb_timeit_t.n`: Number of perfs. (readonly)
+- `siridb_perf_t siridb_timeit_t.perfs[]`: Array of `siridb_perf_t`. (readonly)
+
+Example using timeit info:
+```c
+printf("Query time: %f seconds\n", timeit->perfs[timeit->n - 1].time);
+for (size_t i = 0; i < timeit->n; i++) {
+    printf(
+        "server: %s time: %f\n",
+        timeit->perfs[i].server,
+        timeit->perfs[i].time);
+}
+```
+
+### `siridb_perf_t`
+Perf is part of [timeit](#siridb_timeit_t) info.
+
+*Public members*
+- `char * siridb_perf_t.server`: Server name.
+- `double siridb_perf_t.time`: Time in seconds the query took to process (per server).
+
+### `siridb_select_t`
+Contains series with points. This is a response to a successful select query.
+
+SiriDB example select query:
+```
+select * from 'my-series';
+```
+
+*Public members*
+- `size_t siridb_select_t.n`
+- `siridb_series_t * siridb_select_t.series[]`
 
 ### Miscellaneous functions
 #### `const char * siridb_strerror(int err_code)`
