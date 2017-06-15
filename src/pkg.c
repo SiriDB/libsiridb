@@ -25,7 +25,7 @@ siridb_pkg_t * sirinet_pkg_create(
         pkg->pid = pid;
         pkg->len = len;
         pkg->tp = tp;
-        siridb_pkg_set_checkbit(pkg);
+        siridb__pkg_set_checkbit(pkg);
 
         if (data != NULL)
         {

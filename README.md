@@ -204,7 +204,26 @@ ping_pkg = sirinet_pkg_create(ping_req->pid, CprotoReqPing, NULL, 0);
 #### `siridb_pkg_t * siridb_pkg_auth(uint16_t pid, const char * username, const char * password, const char * dbname)`
 Creates and returns a new package for authenticating with SiriDB. Usually you
 should send an authentication package after creating a socket connection to
-SiriDB. Returns `NULL` in case of an error.
+SiriDB so the connection becomes *authenticated*. Returns `NULL` in case of a
+memory allocation error.
+
+#### `siridb_pkg_t * siridb_pkg_query(uint16_t pid, const char * query)`
+Creates and returns a new package for querying SiriDB. Returns `NULL` in case
+of a memory allocation error.
+
+#### `siridb_pkg_t * siridb_pkg_series(uint16_t pid, siridb_series_t * series[], size_t n)`
+Creates and returns a new package for inserting data into SiriDB. The content
+for the packge is created from an array of [siridb_series_t](#siridb_series_t).
+Argument `n` is the number of series which are packed and must be equal or smaller
+than `series[]`. Returns `NULL` in case of a memory allocation error.
+
+#### `siridb_pkg_t * siridb_pkg_dup(siridb_pkg_t * pkg)`
+Duplicate a pacakge. Returns `NULL` in case of a memory allocation error.
+
+#### `bool siridb_pkg_check_bit(siridb_pkg_t * pkg)`
+Macro function for checking if a package has a valid checkbit. When a package
+header is received, this functions should be used to check if the package is
+valid. Returns 1 (TRUE) if the package is valid or 0 (FALSE) if not.
 
 ### Miscellaneous functions
 #### `const char * siridb_strerror(int err_code)`

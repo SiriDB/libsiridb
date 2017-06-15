@@ -51,7 +51,7 @@ siridb_pkg_t * siridb_packer_2pkg(
 
     /* set package type and the correct check bit */
     pkg->tp = tp;
-    siridb_pkg_set_checkbit(pkg);
+    siridb__pkg_set_checkbit(pkg);
 
     /* set pkg length without the header size */
     pkg->len = packer->len - sizeof(siridb_pkg_t);

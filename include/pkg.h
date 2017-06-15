@@ -12,8 +12,8 @@
 #include "series.h"
 
 /* macros */
-#define siridb_pkg_set_checkbit(PKG) PKG->checkbit = PKG->tp ^ 255
 #define siridb_pkg_check_bit(PKG) (PKG->checkbit == (PKG->tp ^ 255))
+#define siridb__pkg_set_checkbit(PKG) PKG->checkbit = PKG->tp ^ 255
 
 /* type definitions */
 typedef struct siridb_pkg_s siridb_pkg_t;
