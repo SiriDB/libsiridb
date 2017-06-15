@@ -147,12 +147,14 @@ is done with packages.
 - `uint32_t siridb_pkg_t.len`: Length of `siridb_pkg_t.data[]`. (readonly)
 - `uint16_t siridb_pkg_t.pid`: Package identifiers. (readonly)
 - `uint8_t siridb_pkg_t.tp`: Package type. (readonly)
+
   *Request types*
   - `CprotoReqQuery`: Request query.
   - `CprotoReqInsert`: Request insert.
   - `CprotoReqAuth`: Request authentication.
   - `CprotoReqPing`: Request ping.
   - `CprotoReqAdmin`: Request service task.
+
   *Successful response types*
   - `CprotoResQuery`: Response to successful query.
   - `CprotoResInsert`: Response to successful insert.
@@ -162,6 +164,7 @@ is done with packages.
   - `CprotoResFile`: Do not use. (only used by siridb-server)
   - `CprotoAckAdmin`: Response on successful service task. (no data)
   - `CprotoAckAdminData`: Response with data on successful service task.
+
   *Error response types*
   - `CprotoErrMsg`: Error with message.
   - `CprotoErrQuery`: Returned when the query is invalid.
