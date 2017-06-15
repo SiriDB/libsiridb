@@ -455,8 +455,9 @@ Example using `siridb_list_t`:
 ```c
 printf("Headers: ");
 qp_res_fprint(list->headers, stdout);
+printf("\n");
 
-/* Instead of using qp_res_fprint(), lets manually loop over the data */
+/* Lets manually loop over the data and print each row on a new line*/
 for (size_t r = 0; r < list->data->via.array->n; r++) {
     qp_res_t * res = list->data->via.array->values + r;
     if (res->tp != QP_RES_ARRAY) {
