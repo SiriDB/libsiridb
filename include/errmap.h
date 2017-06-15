@@ -21,6 +21,6 @@
 #define ERR_OCCUPIED        -11
 #define ERR_UNKNOWN         -100
 
-const char * siridb_strerror(int err);
+const char * siridb_strerror(int err_code);
 
 #endif /* SIRIDB_ERRMAP_H_ */

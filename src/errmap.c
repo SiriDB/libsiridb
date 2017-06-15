@@ -9,9 +9,9 @@
 #include <siridb.h>
 #include <errno.h>
 
-const char * siridb_strerror(int err)
+const char * siridb_strerror(int err_code)
 {
-    switch (err)
+    switch (err_code)
     {
     case 0:                 return "success";
     case ERR_MEM_ALLOC:     return "memory allocation failed";

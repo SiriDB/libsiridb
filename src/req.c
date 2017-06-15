@@ -62,6 +62,11 @@ siridb_req_t * siridb_req_create(siridb_t * siridb, siridb_cb cb, int * rc)
 
 void siridb_req_destroy(siridb_req_t * req)
 {
+    /* Status should never be ERR_PENDING when the callback function is called
+     * and the callback function must be called before destroying the request.
+     */
+    assert (req->status != ERR_PENDING);
+
     free(req->pkg);
     free(req);
 }
