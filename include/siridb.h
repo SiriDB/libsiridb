@@ -32,7 +32,6 @@ void siridb_destroy(siridb_t * siridb);
 int siridb_on_pkg(siridb_t * siridb, siridb_pkg_t * pkg);
 size_t siridb_queue_len(siridb_t * siridb);
 
-
 /* struct definitions */
 struct siridb_s
 {

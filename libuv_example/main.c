@@ -9,6 +9,10 @@
  *     Be carefull runing this example since it will query and insert data into
  *     SiriDB!
  *
+ *  Compile using:
+ *
+ *     gcc main.c -lqpack -siridb -o example.out
+ *
  *  Created on: Jun 09, 2017
  *      Author: Jeroen van der Heijden <jeroen@transceptor.technology>
  */
