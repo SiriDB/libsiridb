@@ -21,6 +21,7 @@ the resposibility of this library.
   * [API](#api)
     * [siridb_t](#siridb_t)
     * [siridb_req_t](#siridb_req_t)
+    * [siridb_pkg_t](#siridb_pkg_t)
     * [Miscellaneous functions](#miscellaneous-functions)
 
 ---------------------------------------
@@ -173,9 +174,37 @@ is done with packages.
   - `CprotoErrPool`: Request could not be handled because a required pool is unavailable.
   - `CprotoErrUserAccess`: Database user has not enough privileges to handle request.
   - `CprotoErr`: General error. (no data)
+  - `CprotoErrNotAuthenticated`: Connection is not authenticated. (no data)
+  - `CprotoErrAuthCredentials`: Credentials are invalid. (no data)
+  - `CprotoErrAuthUnknownDb`: Database is unknown. (no data)
+  - `CprotoErrLoadingDb`: Do not use. (only used by siridb-server)
+  - `CprotoErrFile`: Do not use. (only used by siridb-server)
+  - `CprotoErrAdmin`: Service error with message.
+  - `CprotoErrAdminInvalidRequest`: Invalid service request. (no data)
 - `uint8_t siridb_pkg_t.checkbit`: Checkbit. (readonly)
 - `unsigned char siridb_pkg_t.data[]`: Empty or content serialized using libqpack. (readonly)
 
+#### `siridb_pkg_t * sirinet_pkg_create(uint16_t pid, uint8_t tp, const unsigned char * data, uint32_t len)`
+Creates and returns a new package. For the pid you should create a
+`siridb_req_t`. In case of an error, `NULL` is returned.
+
+Example creating a ping request package:
+```c
+/* error handling is omitted to keep the example short */
+siridb_req_t * ping_req;
+siridb_pkg_t * ping_pkg;
+ping_req = siridb_req_create(siridb, on_ping_cb, NULL);
+ping_pkg = sirinet_pkg_create(ping_req->pid, CprotoReqPing, NULL, 0);
+/* now you should write (char *) ping_pkg to the siridb socket connection */
+```
+
+>Note: for the most frequently used packages we have specialized functions:
+>`siridb_pkg_auth()`, `siridb_pkg_query()` and `siridb_pkg_series()`.
+
+#### `siridb_pkg_t * siridb_pkg_auth(uint16_t pid, const char * username, const char * password, const char * dbname)`
+Creates and returns a new package for authenticating with SiriDB. Usually you
+should send an authentication package after creating a socket connection to
+SiriDB. Returns `NULL` in case of an error.
 
 ### Miscellaneous functions
 #### `const char * siridb_strerror(int err_code)`
