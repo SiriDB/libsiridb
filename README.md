@@ -439,11 +439,13 @@ for (size_t m = 0; m < select->n; m++) {
 ```
 ### `siridb_list_t`
 List contains a table with information. This is a response to a succesfull list
-query.
+query. Both `headers` and `data` are guaranteed of type `QP_RES_ARRAY` and every
+item inside the `headers` array is of type `QP_RES_STR`. No other assumptions
+should be made about the content of `data`.
 
 *Public members*
-- `qp_res_t * siridb_list_t.headers`: Contains column names.
-- `qp_res_t * siridb_list_t.data`: Contains rows.
+- `qp_res_t * siridb_list_t.headers`: Contains column names. (readonly)
+- `qp_res_t * siridb_list_t.data`: Contains rows. (readonly)
 
 Example list query:
 ```
@@ -451,14 +453,19 @@ list series name, length where length > 1000 limit 10
 ```
 Example using `siridb_list_t`:
 ```c
-printf("Got %zu columns and %zu rows:\n",
-    list->headers->via.array->n,
-    list->data->via.array->n);
+printf("Headers: ");
+qp_res_fprint(list->headers, stdout);
+
+/* Instead of using qp_res_fprint(), lets manually loop over the data */
 for (size_t r = 0; r < list->data->via.array->n; r++) {
-    qp_array_t * row = list->data->via.array->values[r].via.array;
-    for (size_t c = 0; c < row->n; c++) {
+    qp_res_t * res = list->data->via.array->values + r;
+    if (res->tp != QP_RES_ARRAY) {
+        abort(); // do some error handling
+    }
+
+    for (size_t c = 0; c < res->via.array->n; c++) {
         if (c) printf(", ");
-        qp_res_fprint(row->values + c, stdout);
+        qp_res_fprint(res->via.array->values + c, stdout);
     }
     printf("\n");
 }
