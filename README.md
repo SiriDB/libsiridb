@@ -7,8 +7,8 @@ which can be used easily for any project.
 
 Siridb can handle multiple queries and/or inserts on a single connection
 simultaniously. The order in which results are returned is not defined and as
-soon as a request is finished the result will be returned. This means a client
-should keep track of each request. We do this by assigning a pid to each
+soon as a single request is finished the result will be returned. This means a 
+client should keep track of each request. We do this by assigning a pid to each
 request. This pid is an unsigned 16bit integer value and the client is
 responsable for chosing a unique pid. SiriDB simple returns the same pid in its
 response so the client then should able to map the result to the request.
