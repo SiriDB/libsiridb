@@ -37,6 +37,8 @@ the resposibility of this library.
 ---------------------------------------
 
 ## Installation
+>Note: libsiridb requires [libqpack](https://github.com/transceptor-technology/libqpack)
+
 Install debug or release version, in this example we will install the release version.
 ```
 $ cd Release
