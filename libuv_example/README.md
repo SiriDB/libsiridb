@@ -1,6 +1,6 @@
 # SiriDB Connector (libsiridb) with libuv
 This example is written as an extension to libsiridb which we will call libsuv.
-It's up to you to decide if you want to install libsuv ([suv.h](#suv.h)/
+It's up to you to decide if you want to install libsuv ([suv.h](#suv.h) /
 [suv.c](#suv.c)) as a library or just copy the files in your own project.
 
 THis documentation contains the api exposed by libsuv.
