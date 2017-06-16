@@ -312,7 +312,7 @@ void some_callback_func(siridb_req_t * req)
         // we known for sure req->pkg is not NULL since req-status is 0
         siridb_resp_t * resp = siridb_resp_create(req->pkg, &rc);
         if (rc) {
-            printf("error creating response type : %s", siridb_strerror(rc));
+            printf("error creating resp from pkg: %s", siridb_strerror(rc));
         } else {
             // do something with the response
 
