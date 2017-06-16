@@ -71,7 +71,7 @@ Connect and authenticate to SiriDB.
 
 >Warning: This function overwrites the members `buf->siridb->data` and `tcp->data` so
 >you should not use these properties. Instead the public members `buf->data` and
->`connect->data` are available and save to use.
+>`connect->data` are available and safe to use.
 
 Example:
 ```c
