@@ -8,19 +8,10 @@ THis documentation contains the api exposed by libsuv.
 ---------------------------------------
   * [API](#api)
     * [suv_buf_t](#suv_buf_t)
-    * [siridb_req_t](#siridb_req_t)
-    * [siridb_pkg_t](#siridb_pkg_t)
-    * [siridb_packer_t](#siridb_packer_t)
-    * [siridb_resp_t](#siridb_resp_t)
-    * [siridb_series_t](#siridb_series_t)
-    * [siridb_point_t](#siridb_point_t)
-    * [siridb_timeit_t](#siridb_timeit_t)
-    * [siridb_perf_t](#siridb_perf_t)
-    * [siridb_select_t](#siridb_select_t)
-    * [siridb_list_t](#siridb_list_t)
-    * [siridb_show_t](#siridb_show_t)
-    * [siridb_item_t](#siridb_item_t)
-    * [Miscellaneous functions](#miscellaneous-functions)
+    * [suv_write_t](#suv_write_t)
+    * [suv_connect_t](#suv_connect_t)
+    * [suv_query_t](#suv_query_t)
+    * [suv_insert_t](#suv_insert_t)
 
 ---------------------------------------
 
