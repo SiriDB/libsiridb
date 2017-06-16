@@ -235,7 +235,7 @@ responsible for handling the cleanup.
 Returns `NULL` in case of a memory allocation error.
 
 #### `void suv_insert_destroy(suv_insert_t * insert)`
-Cleaunp an insert handle. This function should be called from a request
+Cleanup an insert handle. This function should be called from a request
 (`siridb_req_t`) callback function. Alias for `suv_write_destroy()`.
 
 #### `void suv_insert(suv_insert_t * insert`
