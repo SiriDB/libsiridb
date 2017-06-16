@@ -53,6 +53,14 @@ General write type. Used to communicate with SiriDB.
 not use this field.
 - `void * suv_write_t.pkg`: Contains the package to send. (readonly)
 
+#### `void suv_write_destroy(suv_connect_t * connect)`
+Cleaunp a write handle. This function should be called from a request
+(`siridb_req_t`) callback function.
+
+#### `void suv_write_error(suv_write_t * swrite, int err_code)`
+Used to cancel a write handle. This will set the request status to `err_code`,
+removes the request from the queue and calls the request callback function.
+
 ### `suv_connect_t`
 Connect handle. Alias for `suv_write_t`.
 
@@ -65,7 +73,7 @@ Returns `NULL` in case of an memory allocation error.
 
 #### `void suv_connect_destroy(suv_connect_t * connect)`
 Cleaunp a connection handle. This function should be called from a request
-(`siridb_req_t`) callback function.
+(`siridb_req_t`) callback function. Alias for `suv_write_destroy()`.
 
 #### `void suv_connect(suv_connect_t * connect, suv_buf_t * buf, uv_tcp_t * tcp, struct sockaddr * addr)`
 Connect and authenticate to SiriDB.
@@ -161,7 +169,7 @@ Returns `NULL` in case of an memory allocation error.
 
 #### `void suv_query_destroy(suv_query_t * suvq)`
 Cleaunp a query handle. This function should be called from a request
-(`siridb_req_t`) callback function.
+(`siridb_req_t`) callback function. Alias for `suv_write_destroy()`.
 
 #### `void suv_query(suv_query_t * suvq)`
 Query SiriDB.
@@ -237,7 +245,7 @@ Returns `NULL` in case of an memory allocation error.
 
 #### `void suv_insert_destroy(suv_insert_t * insert)`
 Cleaunp an insert handle. This function should be called from a request
-(`siridb_req_t`) callback function.
+(`siridb_req_t`) callback function. Alias for `suv_write_destroy()`.
 
 #### `void suv_insert(suv_insert_t * insert`
 Insert data into SiriDB.
