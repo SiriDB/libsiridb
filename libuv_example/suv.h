@@ -23,6 +23,9 @@ typedef struct suv_write_s suv_insert_t;
 suv_buf_t * suv_buf_create(siridb_t * siridb);
 void suv_buf_destroy(suv_buf_t * suvbf);
 
+void suv_write_destroy(suv_write_t * swrite);
+void suv_write_error(suv_write_t * swrite, int err_code);
+
 suv_connect_t * suv_connect_create(
     siridb_req_t * req,
     const char * username,

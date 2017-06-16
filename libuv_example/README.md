@@ -169,7 +169,7 @@ Query SiriDB.
 Example
 ```c
 /* first create a request */
-siridb_req_t * req = siridb_req_create(siridb, query_cb, NULL);
+siridb_req_t * req = siridb_req_create(siridb, example_cb, NULL);
 
 /* create query handle */
 suv_query_t * handle = suv_query_create(req, "select * from 'my-series'");
@@ -181,26 +181,43 @@ req->data = (void *) handle;
 suv_query(handle);
 ```
 
-Example query callback function:
+Example callback function:
 ```c
-void query_cb(siridb_req_t * req)
+void example_cb(siridb_req_t * req)
 {
     if (req->status != 0) {
         printf("error handling request: %s", siridb_strerror(req->status));
     } else {
-        /* get the query response */
+        /* get the response */
         siridb_resp_t * resp = siridb_resp_create(req->pkg, NULL);
 
-         // do something with the response...
+        // do something with the response...
+
+        // a general cb function could do something based on the response type...
+        switch(resp->tp) {
+        case SIRIDB_RESP_TP_UNDEF:
+        case SIRIDB_RESP_TP_SELECT:
+        case SIRIDB_RESP_TP_LIST:
+        case SIRIDB_RESP_TP_SHOW:
+        case SIRIDB_RESP_TP_COUNT:
+        case SIRIDB_RESP_TP_CALC:
+        case SIRIDB_RESP_TP_SUCCESS:
+        case SIRIDB_RESP_TP_SUCCESS_MSG:
+        case SIRIDB_RESP_TP_ERROR:
+        case SIRIDB_RESP_TP_ERROR_MSG:
+        case SIRIDB_RESP_TP_HELP:
+        case SIRIDB_RESP_TP_MOTD:
+        case SIRIDB_RESP_TP_DATA: break;
+        }
 
         /* cleanup response */
         siridb_resp_destroy(resp);
     }
 
-    /* destroy query handle */
-    suv_query_destroy((suv_query_t *) req->data);
+    /* destroy handle */
+    suv_write_destroy((suv_write_t *) req->data);
 
-    /* destroy query request */
+    /* destroy request */
     siridb_req_destroy(req);
 }
 ```
@@ -244,7 +261,7 @@ for (size_t i = 0; i < series[0]->n; i++) {
 }
 
 /* create a request */
-siridb_req_t * req = siridb_req_create(siridb, insert_cb, NULL);
+siridb_req_t * req = siridb_req_create(siridb, example_cb, NULL);
 
 /* create insert handle */
 suv_insert_t * handle = suv_insert_create(req, series, 1);
@@ -255,6 +272,7 @@ req->data = (void *) handle;
 /* cleanup the series since the series is now packed in handle->pkg */
 siridb_series_destroy(series[0]);
 
-/* insert data into siridb */
+/* insert data into siridb, the callback should be checked for errors.
+ * (a successful insert has a SIRIDB_RESP_TP_SUCCESS_MSG siridb_resp_t.tp) */
 suv_insert(handle);
 ```

@@ -11,8 +11,6 @@
 #include <assert.h>
 
 static suv_write_t * suv__write_create(void);
-static void suv__write_destroy(suv_write_t * swrite);
-static void suv__write_error(suv_write_t * swrite, int err_code);
 static void suv__write(suv_write_t * swrite);
 static void suv__alloc_buf(uv_handle_t * handle, size_t sugsz, uv_buf_t * buf);
 static void suv__on_data(uv_stream_t * clnt, ssize_t n, const uv_buf_t * buf);
@@ -64,7 +62,7 @@ suv_connect_t * suv_connect_create(
         connect->_req = req;
         if (connect->pkg == NULL)
         {
-            suv__write_destroy(connect);
+            suv_write_destroy(connect);
             connect = NULL;
         }
     }
@@ -76,7 +74,7 @@ suv_connect_t * suv_connect_create(
  */
 void suv_connect_destroy(suv_connect_t * connect)
 {
-    suv__write_destroy((suv_write_t * ) connect);
+    suv_write_destroy((suv_write_t * ) connect);
 }
 
 /*
@@ -94,7 +92,7 @@ void suv_connect(
     uv_connect_t * uvreq = (uv_connect_t *) malloc(sizeof(uv_connect_t));
     if (uvreq == NULL)
     {
-        suv__write_error((suv_write_t *) connect, ERR_MEM_ALLOC);
+        suv_write_error((suv_write_t *) connect, ERR_MEM_ALLOC);
     }
     else
     {
@@ -118,7 +116,7 @@ suv_query_t * suv_query_create(siridb_req_t * req, const char * query)
         suvq->_req = req;
         if (suvq->pkg == NULL)
         {
-            suv__write_destroy(suvq);
+            suv_write_destroy(suvq);
             suvq = NULL;
         }
     }
@@ -130,7 +128,7 @@ suv_query_t * suv_query_create(siridb_req_t * req, const char * query)
  */
 void suv_query_destroy(suv_query_t * suvq)
 {
-    suv__write_destroy((suv_write_t * ) suvq);
+    suv_write_destroy((suv_write_t * ) suvq);
 }
 
 /*
@@ -159,7 +157,7 @@ suv_insert_t * suv_insert_create(
         insert->_req = req;
         if (insert->pkg == NULL)
         {
-            suv__write_destroy(insert);
+            suv_write_destroy(insert);
             insert = NULL;
         }
     }
@@ -171,7 +169,7 @@ suv_insert_t * suv_insert_create(
  */
 void suv_insert_destroy(suv_insert_t * insert)
 {
-    suv__write_destroy((suv_write_t * ) insert);
+    suv_write_destroy((suv_write_t * ) insert);
 }
 
 /*
@@ -200,7 +198,7 @@ static suv_write_t * suv__write_create(void)
 /*
  * Destroy a write object.
  */
-static void suv__write_destroy(suv_write_t * swrite)
+void suv_write_destroy(suv_write_t * swrite)
 {
     free(swrite->pkg);
     free(swrite);
@@ -209,7 +207,7 @@ static void suv__write_destroy(suv_write_t * swrite)
 /*
  * Set request error and run callback
  */
-static void suv__write_error(suv_write_t * swrite, int err_code)
+void suv_write_error(suv_write_t * swrite, int err_code)
 {
     queue_pop(swrite->_req->siridb->queue, swrite->pkg->pid);
     swrite->_req->status = ERR_SOCK_WRITE;
@@ -228,7 +226,7 @@ static void suv__write(suv_write_t * swrite)
 
     if (uvreq == NULL)
     {
-        suv__write_error(swrite, ERR_MEM_ALLOC);
+        suv_write_error(swrite, ERR_MEM_ALLOC);
     }
     else
     {
@@ -252,7 +250,7 @@ static void suv__connect_cb(uv_connect_t * uvreq, int status)
     {
         /* error handling */
         printf("cannot create connection: %s\n",  uv_strerror(status));
-        suv__write_error((suv_write_t *) connect, ERR_SOCK_CONNECT);
+        suv_write_error((suv_write_t *) connect, ERR_SOCK_CONNECT);
     }
     else
     {
@@ -264,7 +262,7 @@ static void suv__connect_cb(uv_connect_t * uvreq, int status)
         uv_write_t * uvw = (uv_write_t *) malloc(sizeof(uv_write_t));
         if (uvw == NULL)
         {
-            suv__write_error((suv_write_t *) connect, ERR_MEM_ALLOC);
+            suv_write_error((suv_write_t *) connect, ERR_MEM_ALLOC);
         }
         else
         {
@@ -378,7 +376,7 @@ static void suv__write_cb(uv_write_t * uvreq, int status)
         suv_write_t * swrite = (suv_write_t *) req->data;
 
         printf("cannot write to socket: %s\n",  uv_strerror(status));
-        suv__write_error(swrite, ERR_SOCK_WRITE);
+        suv_write_error(swrite, ERR_SOCK_WRITE);
     }
 
     /* free uv_write_t */
