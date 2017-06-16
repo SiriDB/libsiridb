@@ -11,7 +11,7 @@
  *
  *  Compile using:
  *
- *     gcc main.c -lqpack -siridb -o example.out
+ *     gcc main.c suv.c -luv -lqpack -lsiridb -o example.out
  *
  *  Created on: Jun 09, 2017
  *      Author: Jeroen van der Heijden <jeroen@transceptor.technology>
@@ -26,8 +26,8 @@
 #include <libsiridb/siridb.h>
 #include "suv.h"
 
-uv_loop_t loop;
-uv_tcp_t tcp;
+static uv_loop_t loop;
+static uv_tcp_t tcp;
 
 /* Change this values to your needs */
 const char * SERVER = "127.0.0.1";
@@ -82,7 +82,6 @@ int main(void)
     suv_connect(connect, buf, &tcp, (struct sockaddr *) &addr);
 
     uv_run(&loop, UV_RUN_DEFAULT);
-    uv_loop_close(&loop);
 
     /* cleanup buffer */
     suv_buf_destroy(buf);
@@ -90,13 +89,17 @@ int main(void)
     /* cleanup siridb */
     siridb_destroy(siridb);
 
+    /* close uv loop */
+    uv_loop_close(&loop);
+
     return 0;
 }
 
 static void connect_cb(siridb_req_t * req)
 {
-    /* handle req == NULL */
     suv_connect_t * connect = (suv_connect_t *) req->data;
+    /* handle connect == NULL (for example in case the request is cancelled
+     * before a connection handle was attached) */
 
     char * query = (char *) connect->data;
     if (req->status)
@@ -232,7 +235,7 @@ static void send_example_query(siridb_t * siridb, const char * query)
     suv_query_t * suvquery = suv_query_create(req, query);
     /* handle suvquery == NULL */
 
-    /* bind suvquery to qreq->data */
+    /* bind suvquery to req->data */
     req->data = (void *) suvquery;
 
     suv_query(suvquery);

@@ -49,6 +49,7 @@ void suv_insert(suv_insert_t * insert);
 /* struct definitions */
 struct suv_buf_s
 {
+    void * data;            /* public */
     char * buf;
     size_t len;
     size_t size;

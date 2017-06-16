@@ -2,7 +2,7 @@
 SiriDB Connector C (libsiridb) is a library which can be used to communicate
 with SiriDB using the C program language. This library contains useful
 functions but does not handle the connection itself. When using
-[libuv](http://libuv.org/) we do have a complete [example](libuv_example/README.md)
+[libuv](http://libuv.org/) we do have a complete [example](libuv_example/)
 which can be used easily for any project.
 
 Siridb can handle multiple queries and/or inserts on a single connection
@@ -29,6 +29,9 @@ the resposibility of this library.
     * [siridb_timeit_t](#siridb_timeit_t)
     * [siridb_perf_t](#siridb_perf_t)
     * [siridb_select_t](#siridb_select_t)
+    * [siridb_list_t](#siridb_list_t)
+    * [siridb_show_t](#siridb_show_t)
+    * [siridb_item_t](#siridb_item_t)
     * [Miscellaneous functions](#miscellaneous-functions)
 
 ---------------------------------------
@@ -68,7 +71,7 @@ a response is received or the request is cancelled.
 not use this field.
 
 #### `siridb_t * siridb_create(void)`
-Creates a new SiriDB Client instance. In case of an error, NULL will be returned.
+Create and return a new SiriDB Client instance. In case of an error, NULL will be returned.
 
 #### `void siridb_destroy(siridb_t * siridb)`
 Cleanup a SiriDB Client instance. In case the queue has pending request then each
@@ -127,7 +130,7 @@ int main(void)
 ```
 
 #### `siridb_req_t * siridb_req_create(siridb_t * siridb, siridb_cb cb, int * rc)`
-Creates and returns a new request. A pid is assigned to the request which is
+Create and return a new request. A pid is assigned to the request which is
 unique in `siridb.queue`. A callback function is required and the
 `siridb_req_t.status` property should be checked by the callback function for
 errors. The initial status is `ERR_PENDING`. This function returns `NULL` in
@@ -192,7 +195,7 @@ is done with packages.
 - `unsigned char siridb_pkg_t.data[]`: Empty or content serialized using libqpack. (readonly)
 
 #### `siridb_pkg_t * sirinet_pkg_create(uint16_t pid, uint8_t tp, const unsigned char * data, uint32_t len)`
-Creates and returns a new package. For the pid you should create a
+Create and return a new package. For the pid you should create a
 `siridb_req_t`. In case of an error, `NULL` is returned.
 
 Example creating a ping request package:
@@ -209,17 +212,17 @@ ping_pkg = sirinet_pkg_create(ping_req->pid, CprotoReqPing, NULL, 0);
 >`siridb_pkg_auth()`, `siridb_pkg_query()` and `siridb_pkg_series()`.
 
 #### `siridb_pkg_t * siridb_pkg_auth(uint16_t pid, const char * username, const char * password, const char * dbname)`
-Creates and returns a new package for authenticating with SiriDB. Usually you
+Create and return a new package for authenticating with SiriDB. Usually you
 should send an authentication package after creating a socket connection to
 SiriDB so the connection becomes *authenticated*. Returns `NULL` in case of a
 memory allocation error.
 
 #### `siridb_pkg_t * siridb_pkg_query(uint16_t pid, const char * query)`
-Creates and returns a new package for querying SiriDB. Returns `NULL` in case
+Create and return a new package for querying SiriDB. Returns `NULL` in case
 of a memory allocation error.
 
 #### `siridb_pkg_t * siridb_pkg_series(uint16_t pid, siridb_series_t * series[], size_t n)`
-Creates and returns a new package for inserting data into SiriDB. The content
+Create and return a new package for inserting data into SiriDB. The content
 for the packge is created from an array of [siridb_series_t](#siridb_series_t).
 Argument `n` is the number of series which are packed and must be equal or smaller
 than `series[]`. Returns `NULL` in case of a memory allocation error.
@@ -248,7 +251,7 @@ Cleanup `siridb_packer_t`.
 >Note: Do not use this function after calling `siridb_packer_2pkg()`.
 
 #### `siridb_pkg_t * siridb_packer_2pkg(siridb_packer_t * packer, uint16_t pid, uint8_t tp)`
-Creates and returns a new package from a `siridb_packer_t`.
+Create and return a new package from a `siridb_packer_t`.
 >Note: The packer will be destroyed and can not be used after calling this
 >function. No new memory will be allocated by this function because the
 >`siridb_pkg_t` is created from the `siridb_packer_t.buffer`.
@@ -288,7 +291,7 @@ is easier to use compared to the raw package.
 - `siridb_timeit_t * siridb_resp_t.timeit`: Optional timeit info or `NULL`.
 
 #### `siridb_resp_t * siridb_resp_create(siridb_pkg_t * pkg, int * rc)`
-Creates and returns a response. A `siridb_req_t` callback function should
+Create and return a response. A `siridb_req_t` callback function should
 check for the request status and when this status is zero then the
 `siridb_req_t.pkg` property can be used to create a nice response object.
 In case of an error `NULL` is returned and an optional `rc` argument can be
@@ -337,7 +340,7 @@ a `select` query statement to SiriDB (see [siridb_select_t](#siridb_select_t).
 - `siridb_point_t siridb_series_t.points[]`: Array of `n` points.
 
 #### `siridb_series_t * siridb_series_create(siridb_series_tp tp, char * name, size_t size)`
-Creates and returns a pointer to a `siridb_series_t` instance. Argument `size`
+Create and return a pointer to a `siridb_series_t` instance. Argument `size`
 defines the number of points the series can hold. If required it can be resized
 using `siridb_series_resize()`.
 
@@ -369,8 +372,8 @@ SiriDB Point type. A point represents a time-stamp and value and is always part
 of a points array in a [siridb_series_t](#siridb_series_t) object.
 
 *Public members*
-- `uint64_t siridb_point_t.ts`: time-stamp
-- `siridb_point_via_t siridb_point_t.via`: value. (Type is defined by the series)
+- `uint64_t siridb_point_t.ts`: Time-stamp (readonly)
+- `siridb_point_via_t siridb_point_t.via`: Value. (Type is defined by the series, readonly)
   - `int64_t int64`
   - `double real`
   - `char * str`
@@ -415,8 +418,8 @@ Perf is part of [timeit](#siridb_timeit_t) info.
 Contains series with points. This is a response to a successful select query.
 
 *Public members*
-- `size_t siridb_select_t.n`: Number of series.
-- `siridb_series_t * siridb_select_t.series[]`: Array of series of length `siridb_series_t.n`.
+- `size_t siridb_select_t.n`: Number of series. (readonly)
+- `siridb_series_t * siridb_select_t.series[]`: Array of series of length `siridb_series_t.n`. (readonly)
 
 Example select query:
 ```
@@ -439,7 +442,7 @@ for (size_t m = 0; m < select->n; m++) {
 }
 ```
 ### `siridb_list_t`
-List contains a table with information. This is a response to a succesfull list
+List contains a table with information. This is a response to a successful list
 query. Both `headers` and `data` are guaranteed of type `QP_RES_ARRAY` and every
 item inside the `headers` array is of type `QP_RES_STR`. No other assumptions
 should be made about the content of `data`.
@@ -472,6 +475,21 @@ for (size_t r = 0; r < list->data->via.array->n; r++) {
     printf("\n");
 }
 ```
+
+### `siridb_show_t`
+Show contains key/value pairs with info. This is a response to a successful
+show query.
+
+*Public members*
+- `size_t siridb_show_t.n`: Number of items. (readonly)
+- `siridb_item_t siridb_show_t.items[]`: Array with `siridb_show_t.n` number of [items](#siridb_item_t). (readonly)
+
+### `siridb_item_t`
+Item contains a key/value pair.
+
+*Public members*
+- `char * siridb_item_t.key`: Name. (null terminated string, readonly)
+- `qp_res_t * siridb_item_t.value`: Value. (readonly)
 
 ### Miscellaneous functions
 #### `const char * siridb_strerror(int err_code)`
