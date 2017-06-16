@@ -4,7 +4,7 @@ with [SiriDB](https://github.com/transceptor-technology/siridb-server) using
 the C program language. This library contains useful functions but does not 
 handle the connection itself. When using
 [libuv](http://libuv.org/) we do have a complete [example](libuv_example/)
-which can be used easily for any project.
+which can easily be used for any project.
 
 [SiriDB](https://github.com/transceptor-technology/siridb-server) can handle 
 multiple queries and/or inserts on a single connection simultaniously. 
@@ -12,7 +12,7 @@ The order in which results are returned is not defined and as
 soon as a single request is finished the result will be returned. This means a 
 client should keep track of each request. We do this by assigning a pid to each
 request. This pid is an unsigned 16bit integer value and the client is
-responsable for chosing a unique pid. SiriDB simple returns the same pid in its
+responsable for chosing a unique pid. SiriDB simply returns the same pid in its
 response so the client then should be able to map the result to the request.
 Assigning a unique pid to a request and mapping a response to the request is
 the resposibility of this library.
@@ -79,7 +79,7 @@ Create and return a new SiriDB Client instance. In case of an error, NULL will b
 
 #### `void siridb_destroy(siridb_t * siridb)`
 Cleanup a SiriDB Client instance. In case the queue has pending request then each
-request will be cancelled. This means the requests status will be set to
+request will be cancelled. This means the request status will be set to
 `ERR_CANCELLED` and the callback function will be called.
 
 #### `void siridb_on_pkg(siridb_t * siridb, siridb_pkg_t * pkg)`
@@ -227,12 +227,12 @@ of a memory allocation error.
 
 #### `siridb_pkg_t * siridb_pkg_series(uint16_t pid, siridb_series_t * series[], size_t n)`
 Create and return a new package for inserting data into SiriDB. The content
-for the packge is created from an array of [siridb_series_t](#siridb_series_t).
+for the package is created from an array of [siridb_series_t](#siridb_series_t).
 Argument `n` is the number of series which are packed and must be equal or smaller
 than `series[]`. Returns `NULL` in case of a memory allocation error.
 
 #### `siridb_pkg_t * siridb_pkg_dup(siridb_pkg_t * pkg)`
-Duplicate a pacakge. Returns `NULL` in case of a memory allocation error.
+Duplicate a package. Returns `NULL` in case of a memory allocation error.
 
 #### `bool siridb_pkg_check_bit(siridb_pkg_t * pkg)`
 Macro function for checking if a package has a valid checkbit. When a package
@@ -242,7 +242,7 @@ valid. Returns 1 (TRUE) if the package is valid or 0 (FALSE) if not.
 ### `siridb_packer_t`
 Alias for `qp_packer_t`. We use an own defined type since `siridb_packer_t`
 created with `siridb_packer_create()` reserves `sizeof(siridb_pkg_t)` extra
-space at the beginning of the buffer. Dispite of this extra space, a
+space at the beginning of the buffer. Despite of this extra space, a
 `siridb_packer_t` instance works with any `qp_packer_t` function except for
 the macro function `qp_packer_print()`.
 
@@ -373,7 +373,7 @@ successful or `ERR_MEM_ALLOC` in case or a memory allocation error.
 
 ### `siridb_point_t`
 SiriDB Point type. A point represents a time-stamp and value and is always part
-of a points array in a [siridb_series_t](#siridb_series_t) object.
+of a points array in an [siridb_series_t](#siridb_series_t) object.
 
 *Public members*
 - `uint64_t siridb_point_t.ts`: Time-stamp (readonly)
