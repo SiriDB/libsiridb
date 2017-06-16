@@ -1,7 +1,8 @@
 # SiriDB Connector C (libsiridb)
 SiriDB Connector C (libsiridb) is a library which can be used to communicate
-with SiriDB using the C program language. This library contains useful
-functions but does not handle the connection itself. When using
+with [SiriDB](https://github.com/transceptor-technology/siridb-server) using 
+the C program language. This library contains useful functions but does not 
+handle the connection itself. When using
 [libuv](http://libuv.org/) we do have a complete [example](libuv_example/)
 which can be used easily for any project.
 
