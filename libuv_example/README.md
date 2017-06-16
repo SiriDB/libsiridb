@@ -21,7 +21,7 @@ THis documentation contains the api exposed by libsuv.
 >should be used instead.
 
 ### `suv_buf_t`
-Buffer required be a connection. Each SiriDB connection must have its own buffer.
+Buffer type. Each SiriDB connection must have its own buffer.
 
 #### `suv_buf_t * suv_buf_create(siridb_t * siridb)`
 Create and return a new buffer. A `siridb_t` instance is required.
