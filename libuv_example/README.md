@@ -3,7 +3,7 @@ This example is written as an extension to libsiridb which we will call libsuv.
 It's up to you to decide if you want to install libsuv ([suv.h](#suv.h) /
 [suv.c](#suv.c)) as a library or just copy the files in your own project.
 
-THis documentation contains the api exposed by libsuv.
+This documentation contains the api exposed by libsuv.
 
 ---------------------------------------
   * [API](#api)
@@ -27,7 +27,7 @@ Buffer type. Each SiriDB connection must have its own buffer.
 Create and return a new buffer. A `siridb_t` instance is required.
 
 >Warning: Do not use `siridb->data` since it will be overwritten as soon as the
->buffer is used be a connection.
+>buffer is used as a connection.
 
 *Public members*
 - `void * suv_buf_t.data`: Space for user-defined arbitrary data. libsuv does
@@ -45,7 +45,7 @@ not use this field.
 - `void * suv_write_t.pkg`: Contains the package to send. (readonly)
 
 #### `void suv_write_destroy(suv_connect_t * connect)`
-Cleaunp a write handle. This function should be called from a request
+Cleanup a write handle. This function should be called from a request
 (`siridb_req_t`) callback function.
 
 #### `void suv_write_error(suv_write_t * swrite, int err_code)`
@@ -58,9 +58,9 @@ Connect handle. Alias for `suv_write_t`.
 #### `suv_connect_t * suv_connect_create(siridb_req_t * req, const char * username, const char * password, const char * dbname)`
 Create and return a connection handle. After the connection handle is created,
 you must manually bind the handle to `req->data`. This must be done explicit to
-make clear that you are also resonsible for handling the cleanup.
+make clear that you are also responsible for handling the cleanup.
 
-Returns `NULL` in case of an memory allocation error.
+Returns `NULL` in case of a memory allocation error.
 
 #### `void suv_connect_destroy(suv_connect_t * connect)`
 Cleaunp a connection handle. This function should be called from a request
@@ -154,9 +154,9 @@ Query handle. Alias for `suv_write_t`.
 #### `suv_query_t * suv_query_create(siridb_req_t * req, const char * query)`
 Create and return a query handle. After the query handle is created,
 you must manually bind the handle to `req->data`. This must be done explicit to
-make clear that you are also resonsible for handling the cleanup.
+make clear that you are also responsible for handling the cleanup.
 
-Returns `NULL` in case of an memory allocation error.
+Returns `NULL` in case of a memory allocation error.
 
 #### `void suv_query_destroy(suv_query_t * suvq)`
 Cleaunp a query handle. This function should be called from a request
@@ -225,17 +225,17 @@ void example_cb(siridb_req_t * req)
 Insert handle. Alias for `suv_write_t`.
 
 #### `suv_insert_t * suv_insert_create(siridb_req_t * req, siridb_series_t * series[], size_t n)`
-Create and return a insert handle. Argument `n` must be equal or smaller than
+Create and return an insert handle. Argument `n` must be equal or smaller than
 the number of series in the `series[]` array.
 
 After the insert handle is created, you must manually bind the handle to
 `req->data`. This must be done explicit to make clear that you are also
-resonsible for handling the cleanup.
+responsible for handling the cleanup.
 
-Returns `NULL` in case of an memory allocation error.
+Returns `NULL` in case of a memory allocation error.
 
 #### `void suv_insert_destroy(suv_insert_t * insert)`
-Cleaunp an insert handle. This function should be called from a request
+Cleanup an insert handle. This function should be called from a request
 (`siridb_req_t`) callback function. Alias for `suv_write_destroy()`.
 
 #### `void suv_insert(suv_insert_t * insert`
