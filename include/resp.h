@@ -13,7 +13,6 @@
 #include "pkg.h"
 
 /* response definitions */
-typedef enum siridb_resp_e siridb_resp_tp;
 typedef union siridb_resp_u siridb_resp_via_t;
 typedef struct siridb_resp_s siridb_resp_t;
 
@@ -26,7 +25,7 @@ typedef struct siridb_item_s siridb_item_t;
 typedef struct siridb_perf_s siridb_perf_t;
 
 /* enumerators */
-enum siridb_resp_e
+typedef enum siridb_resp_e
 {
     SIRIDB_RESP_TP_UNDEF=0,
     SIRIDB_RESP_TP_SELECT,
@@ -41,7 +40,7 @@ enum siridb_resp_e
     SIRIDB_RESP_TP_HELP,
     SIRIDB_RESP_TP_MOTD,    /* only when SiriDB server is in debug mode */
     SIRIDB_RESP_TP_DATA
-};
+} siridb_resp_tp;
 
 /* unions */
 union siridb_resp_u {
@@ -60,8 +59,16 @@ union siridb_resp_u {
 };
 
 /* public functions */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 siridb_resp_t * siridb_resp_create(siridb_pkg_t * pkg, int * rc);
 void siridb_resp_destroy(siridb_resp_t * resp);
+
+#ifdef __cplusplus
+}
+#endif
 
 /* struct definitions */
 struct siridb_resp_s

@@ -9,7 +9,7 @@
 
 #define LIBSIRIDB_VERSION_MAJOR 0
 #define LIBSIRIDB_VERSION_MINOR 9
-#define LIBSIRIDB_VERSION_PATCH 0
+#define LIBSIRIDB_VERSION_PATCH 1
 
 #define LIBSIRIDB_STRINGIFY(num) #num
 #define LIBSIRIDB_VERSION_STR(major,minor,patch)    \
@@ -22,6 +22,14 @@
         LIBSIRIDB_VERSION_MINOR,                    \
         LIBSIRIDB_VERSION_PATCH)
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 const char * siridb_version(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SIRIDB_VERSION_H_ */

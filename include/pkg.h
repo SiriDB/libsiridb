@@ -19,6 +19,10 @@
 typedef struct siridb_pkg_s siridb_pkg_t;
 
 /* public functions */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 siridb_pkg_t * sirinet_pkg_create(
         uint16_t pid,
         uint8_t tp,
@@ -35,6 +39,10 @@ siridb_pkg_t * siridb_pkg_series(
     siridb_series_t * series[],
     size_t n);
 siridb_pkg_t * siridb_pkg_dup(siridb_pkg_t * pkg);
+
+#ifdef __cplusplus
+}
+#endif
 
 /* struct definitions */
 struct siridb_pkg_s

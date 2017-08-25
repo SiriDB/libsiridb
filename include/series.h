@@ -12,10 +12,22 @@
 #include <stddef.h>
 #include "point.h"
 
-typedef enum siridb_series_e siridb_series_tp;
+/* typedefs */
 typedef struct siridb_series_s siridb_series_t;
 
-/* public */
+/* enums */
+typedef enum siridb_series_e
+{
+    SIRIDB_SERIES_TP_INT64,
+    SIRIDB_SERIES_TP_REAL,
+    SIRIDB_SERIES_TP_STR
+} siridb_series_tp;
+
+/* public functions */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 siridb_series_t * siridb_series_create(
         siridb_series_tp tp,
         char * name,
@@ -23,16 +35,14 @@ siridb_series_t * siridb_series_create(
 void siridb_series_destroy(siridb_series_t * series);
 int siridb_series_resize(siridb_series_t ** series, size_t n);
 
+#ifdef __cplusplus
+}
+#endif
+
 /* private */
 siridb_series_tp siridb__series_get_tp(qp_array_t * points);
 
-enum siridb_series_e
-{
-    SIRIDB_SERIES_TP_INT64,
-    SIRIDB_SERIES_TP_REAL,
-    SIRIDB_SERIES_TP_STR
-};
-
+/* struct definitions */
 struct siridb_series_s
 {
     siridb_series_tp tp;

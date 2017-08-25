@@ -17,9 +17,17 @@ typedef struct siridb_req_s siridb_req_t;
 typedef void (*siridb_cb) (siridb_req_t * req);
 
 /* public functions */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 siridb_req_t * siridb_req_create(siridb_t * siridb, siridb_cb cb, int * rc);
 void siridb_req_destroy(siridb_req_t * req);
 void siridb_req_cancel(siridb_req_t * req);
+
+#ifdef __cplusplus
+}
+#endif
 
 /* struct definitions */
 struct siridb_req_s

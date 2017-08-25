@@ -21,6 +21,15 @@
 #define ERR_OCCUPIED        -11
 #define ERR_UNKNOWN         -100
 
+/* public functions */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 const char * siridb_strerror(int err_code);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SIRIDB_ERRMAP_H_ */
