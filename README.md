@@ -1,15 +1,16 @@
 # SiriDB Connector C (libsiridb)
 SiriDB Connector C (libsiridb) is a library which can be used to communicate
-with [SiriDB](https://github.com/transceptor-technology/siridb-server) using 
-the C program language. This library contains useful functions but does not 
+with [SiriDB](https://github.com/transceptor-technology/siridb-server) using
+the C program language. This library contains useful functions but does not
 handle the connection itself. When using
-[libuv](http://libuv.org/) we do have a complete [example](libuv_example/)
-which can easily be used for any project.
+[libuv](http://libuv.org/) you should look at
+[libsuv](https://github.com/transceptor-technology/libsuv) which is a SiriDB
+connector build on top of libuv and libsiridb.
 
-[SiriDB](https://github.com/transceptor-technology/siridb-server) can handle 
-multiple queries and/or inserts on a single connection simultaniously. 
+[SiriDB](https://github.com/transceptor-technology/siridb-server) can handle
+multiple queries and/or inserts on a single connection simultaniously.
 The order in which results are returned is not defined and as
-soon as a single request is finished the result will be returned. This means a 
+soon as a single request is finished the result will be returned. This means a
 client should keep track of each request. We do this by assigning a pid to each
 request. This pid is an unsigned 16bit integer value and the client is
 responsable for chosing a unique pid. SiriDB simply returns the same pid in its
@@ -59,7 +60,7 @@ $ sudo make install
 > Note: run `sudo make uninstall` for removal.
 
 ## Example (libuv implementation)
-This project contains an example of how libsiridb can be used with libuv. The
+For an example This project contains an example of how libsiridb can be used with libuv. The
 example is created as an extend to this api using [suv.h](libuv_example/suv.h)
 and [suv.c](libuv_example/suv.c) which is explained
 [here](libuv_example/README.md). Look at [main.c](#libuv_example/main.c) for an
