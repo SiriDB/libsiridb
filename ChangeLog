@@ -1,10 +1,12 @@
 libsiridb (0.9.1)
 
-  * Example libuv now uses the libsuv library.
+  * Example libuv now uses the libsuv library and is moved to its own repo.
 
   * Build platform independent build.
 
   * Compatible with libqpack version >=0.10.4
+
+  * Fixed compiler warnings.
 
  -- Jeroen van der Heijden <jeroen@transceptor.technology>  31 Aug 2017
 

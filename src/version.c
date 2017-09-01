@@ -7,7 +7,7 @@
 
  #include "version.h"
 
-inline const char * siridb_version(void)
+const char * siridb_version(void)
 {
     return LIBSIRIDB_VERSION;
 }

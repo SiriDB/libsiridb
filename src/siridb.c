@@ -56,8 +56,3 @@ int siridb_on_pkg(siridb_t * siridb, siridb_pkg_t * pkg)
 
     return 0;
 }
-
-inline size_t siridb_queue_len(siridb_t * siridb)
-{
-    return siridb->queue->len;
-}

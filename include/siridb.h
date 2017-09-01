@@ -34,7 +34,7 @@ extern "C" {
 siridb_t * siridb_create(void);
 void siridb_destroy(siridb_t * siridb);
 int siridb_on_pkg(siridb_t * siridb, siridb_pkg_t * pkg);
-size_t siridb_queue_len(siridb_t * siridb);
+#define siridb_queue_len(SIRIDB__) SIRIDB__->queue->len
 
 #ifdef __cplusplus
 }

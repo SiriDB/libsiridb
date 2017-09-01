@@ -4,7 +4,7 @@ with [SiriDB](https://github.com/transceptor-technology/siridb-server) using
 the C program language. This library contains useful functions but does not
 handle the connection itself. When using
 [libuv](http://libuv.org/) you should look at
-[libsuv](https://github.com/transceptor-technology/libsuv) which is a SiriDB
+[libsuv](https://github.com/transceptor-technology/libsuv#readme) which is a SiriDB
 connector build on top of libuv and libsiridb.
 
 [SiriDB](https://github.com/transceptor-technology/siridb-server) can handle
@@ -60,11 +60,8 @@ $ sudo make install
 > Note: run `sudo make uninstall` for removal.
 
 ## Example (libuv implementation)
-For an example This project contains an example of how libsiridb can be used with libuv. The
-example is created as an extend to this api using [suv.h](libuv_example/suv.h)
-and [suv.c](libuv_example/suv.c) which is explained
-[here](libuv_example/README.md). Look at [main.c](#libuv_example/main.c) for an
-example of how to use libsiridb and the libuv implementation.
+For an example you can look at [libsuv](https://github.com/transceptor-technology/libsuv#readme)
+which contains a full example of how to use this library on top of libuv.
 
 ## API
 ### siridb_t
@@ -90,7 +87,7 @@ If this function is able to run the callback, 0 is returned. In case the
 request cannot be found, `ERR_NOT_FOUND` is returned.
 
 #### `size_t siridb_queue_len(siridb_t * siridb)`
-Returns the numbers of requests in the queue.
+Macro function which returns the numbers of requests in the queue.
 
 ### siridb_req_t
 SiriDB Request type. For each request (connecting, queries and inserts) to

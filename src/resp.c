@@ -389,14 +389,14 @@ static int siridb_resp_query(siridb_resp_t * resp, siridb_pkg_t * pkg)
 
 static int siridb_resp_get_timeit(siridb_resp_t * resp, qp_map_t * map)
 {
-    int i;
+    size_t i;
     for (i = 0; i < map->n; i++)
     {
         if (map->keys[i].tp == QP_RES_STR &&
             strcmp(map->keys[i].via.str, "__timeit__") == 0 &&
             map->values[i].tp == QP_RES_ARRAY)
         {
-            int j;
+            size_t j;
             qp_array_t * timeits = map->values[i].via.array;
             resp->timeit = (siridb_timeit_t *) malloc(
                     sizeof(siridb_timeit_t) +
@@ -658,7 +658,7 @@ static int siridb_resp_get_show(siridb_resp_t * resp, qp_map_t * map)
 
 static int siridb_resp_get_count(siridb_resp_t * resp, qp_map_t * map)
 {
-    size_t i;
+    int i;
     qp_res_t * tmp;
 
     for (i = 0; i < count_num; i++)
