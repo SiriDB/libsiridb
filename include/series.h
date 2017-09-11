@@ -30,7 +30,7 @@ extern "C" {
 
 siridb_series_t * siridb_series_create(
         siridb_series_tp tp,
-        char * name,
+        const char * name,
         size_t size);
 void siridb_series_destroy(siridb_series_t * series);
 int siridb_series_resize(siridb_series_t ** series, size_t n);
@@ -46,7 +46,7 @@ siridb_series_tp siridb__series_get_tp(qp_array_t * points);
 struct siridb_series_s
 {
     siridb_series_tp tp;
-    const char * name;
+    char * name;
     size_t n;
     siridb_point_t points[];
 };
