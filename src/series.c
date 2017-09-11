@@ -16,7 +16,7 @@
  */
 siridb_series_t * siridb_series_create(
         siridb_series_tp tp,
-        char * name,
+        const char * name,
         size_t n)
 {
     siridb_series_t * series = (siridb_series_t *) malloc(
