@@ -1,3 +1,10 @@
+libsiridb (0.9.2)
+
+  * Changed 'char * name' to 'const char * name' in siridb_series_create
+    function decleration.
+
+ -- Jeroen van der Heijden <jeroen@transceptor.technology>  11 Sep 2017
+
 libsiridb (0.9.1)
 
   * Example libuv now uses the libsuv library and is moved to its own repo.
