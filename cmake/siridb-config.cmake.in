@@ -1,0 +1,8 @@
+@PACKAGE_INIT@ 
+
+set_and_check(siridb_INCLUDE_DIRS "@CMAKE_INSTALL_FULL_INCLUDEDIR@")
+set_and_check(siridb_LIBRARY_DIRS "@CMAKE_INSTALL_FULL_LIBDIR@")
+
+message(STATUS "Found libsiridb: ${siridb_INCLUDE_DIRS} (found version ${siridb_VERSION})")
+
+include("${CMAKE_CURRENT_LIST_DIR}/siridb-targets.cmake")
