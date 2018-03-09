@@ -4,10 +4,10 @@ with [SiriDB](https://github.com/transceptor-technology/siridb-server) using
 the C program language. This library contains useful functions but does not
 handle the connection itself. When using
 [libuv](http://libuv.org/) you should look at
-[libsuv](https://github.com/transceptor-technology/libsuv#readme) which is a SiriDB
+[libsuv](https://github.com/SiriDB/libsuv#readme) which is a SiriDB
 connector build on top of libuv and libsiridb.
 
-[SiriDB](https://github.com/transceptor-technology/siridb-server) can handle
+[SiriDB](https://github.com/SiriDB/siridb-server) can handle
 multiple queries and/or inserts on a single connection simultaniously.
 The order in which results are returned is not defined and as
 soon as a single request is finished the result will be returned. This means a
@@ -60,7 +60,7 @@ $ sudo make install
 > Note: run `sudo make uninstall` for removal.
 
 ## Example (libuv implementation)
-For an example you can look at [libsuv](https://github.com/transceptor-technology/libsuv#readme)
+For an example you can look at [libsuv](https://github.com/SiriDB/libsuv#readme)
 which contains a full example of how to use this library on top of libuv.
 
 ## API
