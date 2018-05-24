@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2 FATAL_ERROR)
-project(siridb VERSION 0.9.2)
+project(siridb VERSION 0.9.3)
 
 if (NOT DEFINED CMAKE_BUILD_TYPE)
 	set (CMAKE_BUILD_TYPE Release)

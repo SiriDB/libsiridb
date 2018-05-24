@@ -82,6 +82,16 @@ int siridb_series_resize(siridb_series_t ** series, size_t n)
         return ERR_MEM_ALLOC;
     }
 
+    if (tmp->tp == SIRIDB_SERIES_TP_STR)
+    {
+        /* initialize string series with NULL pointers */
+        size_t i;
+        for (i = tmp->n; i < n; i++)
+        {
+            tmp->points[i].via.str = NULL;
+        }
+    }
+
     /* overwrite the original value with the new one */
     tmp->n = n;
     *series = tmp;

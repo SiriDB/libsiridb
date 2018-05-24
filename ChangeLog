@@ -1,3 +1,10 @@
+libsiridb (0.9.3)
+
+  * Fixed bug in siridb_series_resize() when the series is of string type.
+    (issue #4)
+
+ -- Jeroen van der Heijden <jeroen@transceptor.technology>  24 May 2018
+
 libsiridb (0.9.2)
 
   * Changed 'char * name' to 'const char * name' in siridb_series_create
