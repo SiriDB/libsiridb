@@ -211,6 +211,14 @@ static void queue__node_free_cb(queue_node_t * node, queue_cb cb)
 
     for (uint8_t i = 0; i < QUEUE_NODE_SZ; i++)
     {
+        /* Sometimes the callback calls queue_pop, which can free the
+         * node->nodes, so we should check for NULL before dereferencing it.
+         */
+        if (node->nodes == NULL)
+        {
+            return;
+        }
+
         nd = node->nodes + i;
 
         if (nd->data != NULL)
