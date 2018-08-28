@@ -9,9 +9,9 @@
 
 #define LIBSIRIDB_VERSION_MAJOR 0
 #define LIBSIRIDB_VERSION_MINOR 9
-#define LIBSIRIDB_VERSION_PATCH 3
+#define LIBSIRIDB_VERSION_PATCH 4
 
-#define LIBSIRIDB_VERSION "0.9.3"
+#define LIBSIRIDB_VERSION "0.9.4"
 
 #ifdef __cplusplus
 extern "C" {
