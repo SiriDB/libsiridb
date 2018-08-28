@@ -40,3 +40,6 @@
 
 # CMake build artifacts
 [Bb]uild/
+
+# VSCode
+.vscode/

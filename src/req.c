@@ -76,6 +76,12 @@ void siridb_req_cancel(siridb_req_t * req)
     /* remove req from queue if exists */
     queue_pop(req->siridb->queue, (uint64_t) req->pid);
 
+    /* set err type and run callback */
+    siridb__req_cancel(req);
+}
+
+void siridb__req_cancel(siridb_req_t * req)
+{
     /* set err type and status */
     req->status = ERR_CANCELLED;
 

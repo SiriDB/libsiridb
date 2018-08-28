@@ -29,6 +29,9 @@ void siridb_req_cancel(siridb_req_t * req);
 }
 #endif
 
+/* private functions */
+void siridb__req_cancel(siridb_req_t * req);
+
 /* struct definitions */
 struct siridb_req_s
 {

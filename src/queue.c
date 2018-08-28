@@ -13,11 +13,10 @@
 #define QUEUE_NODE_SZ 32
 
 static void queue__node_free(queue_node_t * node);
-static void queue__node_free_cb(queue_node_t * node, queue_cb cb);
 static int queue__add(queue_node_t * node, uint64_t id, void * data);
 static void * queue__get(queue_node_t * node, uint64_t id);
 static void * queue__pop(queue_node_t * node, uint64_t id);
-static void queue__walk(queue_node_t * node, queue_cb cb, int * rc);
+static void queue__walk(queue_node_t * node, queue_cb cb);
 
 
 /*
@@ -39,39 +38,19 @@ queue_t * queue_create(void)
 /*
  * Destroy queue with optional call-back function.
  */
-void queue_destroy(queue_t * queue, queue_cb cb)
+void queue_destroy(queue_t * queue)
 {
     if (queue->len)
     {
         queue_node_t * nd;
 
-        if (cb == NULL)
+        for (uint8_t i = 0; i < QUEUE_NODE_SZ; i++)
         {
-            for (uint8_t i = 0; i < QUEUE_NODE_SZ; i++)
+            nd = queue->nodes + i;
+
+            if (nd->nodes != NULL)
             {
-                nd = queue->nodes + i;
-
-                if (nd->nodes != NULL)
-                {
-                    queue__node_free(nd);
-                }
-            }
-        }
-        else
-        {
-            for (uint8_t i = 0; i < QUEUE_NODE_SZ; i++)
-            {
-                nd = queue->nodes + i;
-
-                if (nd->data != NULL)
-                {
-                    (*cb)(nd->data);
-                }
-
-                if (nd->nodes != NULL)
-                {
-                    queue__node_free_cb(nd, cb);
-                }
+                queue__node_free(nd);
             }
         }
     }
@@ -163,10 +142,8 @@ void * queue_pop(queue_t * queue, uint64_t id)
  * All the results are added together and are returned as the result of
  * this function.
  */
-int queue_walk(queue_t * queue, queue_cb cb)
+void queue_walk(queue_t * queue, queue_cb cb)
 {
-    int rc = 0;
-
     if (queue->len)
     {
         queue_node_t * nd;
@@ -177,17 +154,15 @@ int queue_walk(queue_t * queue, queue_cb cb)
 
             if (nd->data != NULL)
             {
-                rc += (*cb)(nd->data);
+                (*cb)(nd->data);
             }
 
             if (nd->nodes != NULL)
             {
-                queue__walk(nd, cb, &rc);
+                queue__walk(nd, cb);
             }
         }
     }
-
-    return rc;
 }
 
 static void queue__node_free(queue_node_t * node)
@@ -202,35 +177,6 @@ static void queue__node_free(queue_node_t * node)
         }
     }
 
-    free(node->nodes);
-}
-
-static void queue__node_free_cb(queue_node_t * node, queue_cb cb)
-{
-    queue_node_t * nd;
-
-    for (uint8_t i = 0; i < QUEUE_NODE_SZ; i++)
-    {
-        /* Sometimes the callback calls queue_pop, which can free the
-         * node->nodes, so we should check for NULL before dereferencing it.
-         */
-        if (node->nodes == NULL)
-        {
-            return;
-        }
-
-        nd = node->nodes + i;
-
-        if (nd->data != NULL)
-        {
-            (*cb)(nd->data);
-        }
-
-        if (nd->nodes != NULL)
-        {
-            queue__node_free_cb(nd, cb);
-        }
-    }
     free(node->nodes);
 }
 
@@ -326,7 +272,7 @@ static void * queue__pop(queue_node_t * node, uint64_t id)
     return data;
 }
 
-static void queue__walk(queue_node_t * node, queue_cb cb, int * rc)
+static void queue__walk(queue_node_t * node, queue_cb cb)
 {
     queue_node_t * nd;
 
@@ -336,12 +282,12 @@ static void queue__walk(queue_node_t * node, queue_cb cb, int * rc)
 
         if (nd->data != NULL)
         {
-            *rc += (*cb)(nd->data);
+            (*cb)(nd->data);
         }
 
         if (nd->nodes != NULL)
         {
-            queue__walk(nd, cb, rc);
+            queue__walk(nd, cb);
         }
     }
 }

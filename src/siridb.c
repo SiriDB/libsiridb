@@ -36,7 +36,8 @@ siridb_t * siridb_create(void)
 
 void siridb_destroy(siridb_t * siridb)
 {
-    queue_destroy(siridb->queue, (queue_cb) siridb_req_cancel);
+    queue_walk(siridb->queue, (queue_cb) siridb__req_cancel);
+    queue_destroy(siridb->queue);
     free(siridb);
 }
 
