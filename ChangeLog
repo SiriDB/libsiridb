@@ -1,3 +1,9 @@
+libsiridb (0.9.4)
+
+  * Fix NULL dereferencing in queue__node_free_cb. (#5, @pavelxdd )
+
+ -- Jeroen van der Heijden <jeroen@transceptor.technology>  28 Aug 2018
+
 libsiridb (0.9.3)
 
   * Fixed bug in siridb_series_resize() when the series is of string type.
