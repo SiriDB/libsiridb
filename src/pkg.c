@@ -49,9 +49,12 @@ siridb_pkg_t * siridb_pkg_auth(
     }
 
     if (qp_add_array(&packer) ||
-        qp_add_raw(packer, username, strlen(username)) ||
-        qp_add_raw(packer, password, strlen(password)) ||
-        qp_add_raw(packer, dbname, strlen(dbname)) ||
+        qp_add_raw(
+            packer, (const unsigned char *) username, strlen(username)) ||
+        qp_add_raw(
+            packer, (const unsigned char *) password, strlen(password)) ||
+        qp_add_raw(
+            packer, (const unsigned char *) dbname, strlen(dbname)) ||
         qp_close_array(packer))
     {
         siridb_packer_destroy(packer);
@@ -70,7 +73,7 @@ siridb_pkg_t * siridb_pkg_query(uint16_t pid, const char * query)
     }
 
     if (qp_add_array(&packer) ||
-        qp_add_raw(packer, query, strlen(query)) ||
+        qp_add_raw(packer, (const unsigned char *) query, strlen(query)) ||
         qp_close_array(packer))
     {
         siridb_packer_destroy(packer);
@@ -97,7 +100,8 @@ siridb_pkg_t * siridb_pkg_series(
     for (size_t i = 0; i < n; i ++)
     {
         siridb_series_t * s = series[i];
-        rc += qp_add_raw(packer, s->name, strlen(s->name)); /* series name */
+        /* series name */
+        rc += qp_add_raw(packer, (unsigned char *) s->name, strlen(s->name));
         rc += qp_add_array(&packer); /* add points array */
         for (size_t p = 0; p < s->n; p++)
         {
@@ -113,7 +117,7 @@ siridb_pkg_t * siridb_pkg_series(
             case SIRIDB_SERIES_TP_STR:
                 rc += qp_add_raw(
                     packer,
-                    point->via.str,
+                    (unsigned char *) point->via.str,
                     strlen(point->via.str)); break;
             default:
                 assert (0); /* unknown series type */
